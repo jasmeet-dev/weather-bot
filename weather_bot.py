@@ -16,7 +16,23 @@ EMAIL_TO = [
 
 LATITUDE = 28.61
 LONGITUDE = 77.21
-WAQI_TOKEN = os.environ.get("WAQI_TOKEN", "df56b8c9b5f05b131e0af5c086e8ef2c4a1ce50a")
+GURGAON_LAT = 28.46
+GURGAON_LON = 77.03
+
+PM25_BREAKPOINTS = [
+    (0.0, 12.0, 0, 50), (12.1, 35.4, 51, 100),
+    (35.5, 55.4, 101, 150), (55.5, 150.4, 151, 200),
+    (150.5, 250.4, 201, 300), (250.5, 350.4, 301, 400),
+    (350.5, 500.4, 401, 500),
+]
+
+def pm25_to_aqi(pm25):
+    if pm25 is None: return None
+    cp = round(pm25, 1)
+    for clo, chi, ilo, ihi in PM25_BREAKPOINTS:
+        if clo <= cp <= chi:
+            return round((ihi - ilo) / (chi - clo) * (cp - clo) + ilo)
+    return None
 
 def aqi_label(val):
     if val is None: return ("N/A", "#888888")
@@ -204,12 +220,13 @@ tomorrow = {"high": daily["temperature_2m_max"][1], "low": daily["temperature_2m
             "sunrise": datetime.fromisoformat(daily["sunrise"][1]).strftime("%I:%M %p"),
             "sunset":  datetime.fromisoformat(daily["sunset"][1]).strftime("%I:%M %p")}
 
-# --- AQI API (WAQI - real station data) ---
-waqi_data = requests.get(f"https://api.waqi.info/feed/gurgaon/?token={WAQI_TOKEN}").json()["data"]
-aqi_today = waqi_data["aqi"]
-tomorrow_str = (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d")
-pm25_forecast = waqi_data.get("forecast", {}).get("daily", {}).get("pm25", [])
-aqi_tomorrow = next((d["avg"] for d in pm25_forecast if d["day"] == tomorrow_str), None)
+# --- AQI (open-meteo PM2.5 → US AQI) ---
+pm25_hourly = requests.get("https://air-quality-api.open-meteo.com/v1/air-quality", params={
+    "latitude": GURGAON_LAT, "longitude": GURGAON_LON,
+    "hourly": "pm2_5", "timezone": "auto",
+}).json()["hourly"]["pm2_5"]
+aqi_today    = pm25_to_aqi(pm25_hourly[datetime.now().hour])
+aqi_tomorrow = pm25_to_aqi(next((v for v in pm25_hourly[24+6:24+19] if v is not None), None))
 
 # --- Thought of the Day ---
 try:
