@@ -1,3 +1,4 @@
+import csv
 import os
 import platform
 import requests
@@ -5,6 +6,26 @@ import smtplib
 import subprocess
 from email.message import EmailMessage
 from datetime import datetime, timedelta
+
+LOG_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "logs", "email_log.csv")
+
+def log_email(name, email, city_data_list, status="sent"):
+    os.makedirs(os.path.dirname(LOG_FILE), exist_ok=True)
+    write_header = not os.path.exists(LOG_FILE) or os.path.getsize(LOG_FILE) == 0
+    with open(LOG_FILE, "a", newline="") as f:
+        w = csv.writer(f)
+        if write_header:
+            w.writerow(["timestamp","name","email","cities","themes","aqi_today","rain_today","temp_high","status"])
+        for city_name, today, _ in city_data_list:
+            w.writerow([
+                datetime.now().strftime("%Y-%m-%d %H:%M"),
+                name, email, city_name,
+                theme_for_code(today.get("code_now", 0))["name"],
+                today.get("aqi", ""),
+                today.get("rain", ""),
+                today.get("high", ""),
+                status,
+            ])
 
 EMAIL_ADDRESS = "jasmeet27ghotra@gmail.com"
 EMAIL_PASSWORD = os.environ.get("EMAIL_PASSWORD", "shrm zocd cjut xbzi")
@@ -355,4 +376,9 @@ for recipient in RECIPIENTS:
     themes_used    = "+".join(theme_for_code(t.get("code_now",0))["name"] for _,t,_ in city_data_list)
     print(f"Sending to {recipient['email']} ({city_label}) [{themes_used}]...")
     print(plain)
-    send_email(recipient["email"], subject, plain, html)
+    try:
+        send_email(recipient["email"], subject, plain, html)
+        log_email(name, recipient["email"], city_data_list, "sent")
+    except Exception as e:
+        log_email(name, recipient["email"], city_data_list, f"failed: {e}")
+        raise

@@ -8,6 +8,8 @@ on:
 jobs:
   send-report:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
 
@@ -18,3 +20,11 @@ jobs:
         env:
           EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
         run: python3 weather_bot.py
+
+      - name: Commit email log
+        run: |
+          git config user.name "Weather Bot"
+          git config user.email "bot@weather"
+          git add logs/email_log.csv
+          git diff --cached --quiet || git commit -m "📧 Log: $(date +'%Y-%m-%d') email run"
+          git push
