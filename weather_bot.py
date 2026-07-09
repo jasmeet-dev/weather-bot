@@ -347,7 +347,9 @@ def build_html(city_data_list, thought, recipient_name=""):
     tab_bar = "" if len(city_data_list) == 1 else f"""
 <div id="tab-bar" style="position:sticky;top:0;z-index:999;background:{body_bg};
      padding:10px 0 12px 0;margin-bottom:4px;border-bottom:1px solid {first_theme['bdr']};">
-  {tab_btns}
+  <div style="max-width:560px;margin:0 auto;padding:0 16px;text-align:center;">
+    {tab_btns}
+  </div>
 </div>"""
 
     return f"""<!DOCTYPE html>
