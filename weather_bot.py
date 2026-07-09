@@ -11,7 +11,7 @@ EMAIL_PASSWORD = os.environ.get("EMAIL_PASSWORD", "shrm zocd cjut xbzi")
 
 RECIPIENTS = [
     {"name": "Jasmeet",   "email": "jasmeet27ghotra@gmail.com",     "cities": ["Gurgaon", "Mohali"]},
-    {"name": "Harsh",     "email": "harshsingh94@gmail.com",         "cities": ["Gurgaon"]},
+    {"name": "Harsh",     "email": "harshsingh94@gmail.com",         "cities": ["Gurgaon", "Mohali"]},
     {"name": "Sukhwinder","email": "sukhwinder.singhepfo@gmail.com", "cities": ["Gurgaon", "Mohali"]},
     {"name": "Jasbir",    "email": "kjasbirkaur@gmail.com",          "cities": ["Mohali"]},
     {"name": "Gazaldeep", "email": "Gazaldeep.gk@gmail.com",         "cities": ["Mohali"]},
@@ -62,12 +62,41 @@ def fetch_pm25_avg(aqi_points, hour_index):
             readings.append(val)
     return sum(readings) / len(readings) if readings else None
 
+WEATHER_ICON = {
+    0:"☀️",1:"🌤️",2:"⛅",3:"☁️",45:"🌫️",48:"🌫️",
+    51:"🌦️",53:"🌦️",55:"🌦️",61:"🌧️",63:"🌧️",65:"🌧️",
+    71:"🌨️",73:"🌨️",75:"🌨️",80:"🌧️",81:"🌧️",82:"🌧️",
+    95:"⛈️",96:"⛈️",99:"⛈️",
+}
+WEATHER_DESC = {
+    0:"Clear Sky",1:"Mainly Clear",2:"Partly Cloudy",3:"Overcast",
+    45:"Foggy",48:"Foggy",51:"Light Drizzle",53:"Drizzle",55:"Heavy Drizzle",
+    61:"Light Rain",63:"Rain",65:"Heavy Rain",71:"Light Snow",73:"Snow",75:"Heavy Snow",
+    80:"Rain Showers",81:"Rain Showers",82:"Heavy Showers",
+    95:"Thunderstorm",96:"Thunderstorm",99:"Severe Thunderstorm",
+}
+
+THEMES = [
+    {"name":"Midnight Blue",    "dark":True,  "body":"#000d1f", "grad":"linear-gradient(160deg,#000000 0%,#050d1a 50%,#000d1f 100%)", "c1":"rgba(0,100,255,0.2)",    "c2":"rgba(0,212,255,0.1)",  "bdr":"rgba(0,212,255,0.3)",  "acc":"#00d4ff", "acc2":"#0066ff", "mut":"#7dd3fc", "sub":"#0066ff", "txt":"white", "tmp":"#00d4ff"},
+    {"name":"Aurora",           "dark":True,  "body":"#0d0d1a", "grad":"linear-gradient(160deg,#0d0d1a 0%,#1a0a2e 55%,#0a1a28 100%)","c1":"rgba(167,139,250,0.12)", "c2":"rgba(52,211,153,0.1)", "bdr":"rgba(167,139,250,0.3)","acc":"#a78bfa", "acc2":"#34d399", "mut":"#c4b5fd", "sub":"#7c3aed", "txt":"white", "tmp":"#a78bfa"},
+    {"name":"Neon Dark",        "dark":True,  "body":"#0a0a0a", "grad":"linear-gradient(160deg,#0a0a0a 0%,#150010 55%,#0a0a00 100%)", "c1":"rgba(255,0,110,0.15)",   "c2":"rgba(255,0,110,0.1)",  "bdr":"rgba(255,0,110,0.3)",  "acc":"#ff006e", "acc2":"#ffbe0b", "mut":"#ff69b4", "sub":"#cc0057", "txt":"white", "tmp":"#ffbe0b"},
+    {"name":"Dark Teal+Gold",   "dark":True,  "body":"#050f14", "grad":"linear-gradient(160deg,#0a1628 0%,#0d2137 55%,#081520 100%)", "c1":"rgba(0,180,166,0.15)",   "c2":"rgba(255,215,0,0.12)", "bdr":"rgba(255,215,0,0.35)", "acc":"#ffd700", "acc2":"#00b4a6", "mut":"#7dd3c8", "sub":"#00867d", "txt":"white", "tmp":"#ffd700"},
+    {"name":"Crimson Night",    "dark":True,  "body":"#0d0000", "grad":"linear-gradient(160deg,#0d0000 0%,#1a0505 55%,#0d0800 100%)", "c1":"rgba(255,51,51,0.15)",   "c2":"rgba(255,51,51,0.1)",  "bdr":"rgba(255,107,0,0.3)",  "acc":"#ff3333", "acc2":"#ff6b00", "mut":"#ffa07a", "sub":"#cc2200", "txt":"white", "tmp":"#ff6b00"},
+    {"name":"Sky Breeze",       "dark":False, "body":"#e8f4fd", "grad":"linear-gradient(160deg,#ffffff 0%,#dbeafe 60%,#e0f2fe 100%)", "c1":"rgba(59,130,246,0.1)",   "c2":"rgba(59,130,246,0.08)","bdr":"rgba(59,130,246,0.3)", "acc":"#2563eb", "acc2":"#0ea5e9", "mut":"#475569", "sub":"#64748b", "txt":"#1e3a5f","tmp":"#1d4ed8"},
+    {"name":"Tropical Sunrise", "dark":False, "body":"#fff7ed", "grad":"linear-gradient(160deg,#ffffff 0%,#fef3c7 50%,#fce7f3 100%)","c1":"rgba(251,146,60,0.12)",  "c2":"rgba(251,146,60,0.08)","bdr":"rgba(251,146,60,0.35)","acc":"#ea580c", "acc2":"#db2777", "mut":"#78350f", "sub":"#92400e", "txt":"#431407","tmp":"#c2410c"},
+    {"name":"Fresh Mint",       "dark":False, "body":"#f0fdf4", "grad":"linear-gradient(160deg,#ffffff 0%,#dcfce7 55%,#d1fae5 100%)","c1":"rgba(34,197,94,0.12)",   "c2":"rgba(34,197,94,0.08)", "bdr":"rgba(34,197,94,0.3)",  "acc":"#16a34a", "acc2":"#059669", "mut":"#374151", "sub":"#4b5563", "txt":"#14532d","tmp":"#15803d"},
+]
+
 def fetch_city_data(lat, lon, aqi_points):
-    daily = requests.get("https://api.open-meteo.com/v1/forecast", params={
+    resp = requests.get("https://api.open-meteo.com/v1/forecast", params={
         "latitude": lat, "longitude": lon,
-        "daily": "temperature_2m_max,temperature_2m_min,precipitation_probability_max,apparent_temperature_max,uv_index_max,sunrise,sunset",
+        "daily":  "temperature_2m_max,temperature_2m_min,precipitation_probability_max,apparent_temperature_max,uv_index_max,sunrise,sunset",
+        "hourly": "temperature_2m,precipitation_probability,weathercode,windspeed_10m,relativehumidity_2m",
         "timezone": "auto",
-    }).json()["daily"]
+    }).json()
+    daily = resp["daily"]
+    h     = resp["hourly"]
+    now   = datetime.now().hour
 
     today = {
         "high": daily["temperature_2m_max"][0], "low": daily["temperature_2m_min"][0],
@@ -75,7 +104,13 @@ def fetch_city_data(lat, lon, aqi_points):
         "uv": daily["uv_index_max"][0],
         "sunrise": datetime.fromisoformat(daily["sunrise"][0]).strftime("%I:%M %p"),
         "sunset":  datetime.fromisoformat(daily["sunset"][0]).strftime("%I:%M %p"),
-        "aqi": pm25_to_aqi(fetch_pm25_avg(aqi_points, datetime.now().hour)),
+        "aqi": pm25_to_aqi(fetch_pm25_avg(aqi_points, now)),
+        "temp_now":  h["temperature_2m"][now],
+        "wind_now":  round(h["windspeed_10m"][now]),
+        "humid_now": h["relativehumidity_2m"][now],
+        "code_now":  h["weathercode"][now],
+        "hourly_temps": h["temperature_2m"],
+        "hourly_codes": h["weathercode"],
     }
     tomorrow = {
         "high": daily["temperature_2m_max"][1], "low": daily["temperature_2m_min"][1],
@@ -84,6 +119,7 @@ def fetch_city_data(lat, lon, aqi_points):
         "sunrise": datetime.fromisoformat(daily["sunrise"][1]).strftime("%I:%M %p"),
         "sunset":  datetime.fromisoformat(daily["sunset"][1]).strftime("%I:%M %p"),
         "aqi": pm25_to_aqi(fetch_pm25_avg(aqi_points, slice(24+6, 24+19))),
+        "code_now": h["weathercode"][24],
     }
     return today, tomorrow
 
@@ -104,84 +140,136 @@ def advisories(today, tomorrow):
         tips.append(("🌞", "UV is high — sunscreen mandatory if outdoors."))
     return tips
 
-def weather_section_html(city_name, today, tomorrow):
-    aqi_t_label,   aqi_t_color   = aqi_label(today["aqi"])
-    aqi_tmr_label, aqi_tmr_color = aqi_label(tomorrow["aqi"])
-    tips = advisories(today, tomorrow)
+def pick_theme(city_data_list):
+    dark_themes  = [t for t in THEMES if t["dark"]]
+    light_themes = [t for t in THEMES if not t["dark"]]
+    day = datetime.now().timetuple().tm_yday
+    is_thunder = any(today.get("code_now", 0) in (95, 96, 99)
+                     for _, today, _ in city_data_list)
+    pool = dark_themes if is_thunder else light_themes
+    return pool[day % len(pool)]
+
+def hourly_strip(today, t):
+    slots = [6, 9, 12, 15, 18, 21]
+    cells = ""
+    for h in slots:
+        icon  = WEATHER_ICON.get(today["hourly_codes"][h], "🌡️")
+        temp  = round(today["hourly_temps"][h])
+        label = datetime(2000,1,1,h).strftime("%-I %p")
+        cells += (f'<td style="text-align:center;padding:0 6px;">'
+                  f'<div style="font-size:11px;color:{t["sub"]};margin-bottom:6px;">{label}</div>'
+                  f'<div style="font-size:22px;line-height:1;">{icon}</div>'
+                  f'<div style="font-size:13px;font-weight:700;color:{t["acc"]};margin-top:6px;">{temp}°</div>'
+                  f'</td>')
+    return (f'<table width="100%" cellpadding="0" cellspacing="0" '
+            f'style="border-collapse:collapse;margin-top:12px;"><tr>{cells}</tr></table>')
+
+def city_card(city_name, today, tomorrow, t, thought=None):
+    icon     = WEATHER_ICON.get(today["code_now"], "🌡️")
+    desc     = WEATHER_DESC.get(today["code_now"], "")
+    tmr_icon = WEATHER_ICON.get(tomorrow.get("code_now", 0), "🌡️")
+    aqi_lbl,  aqi_col  = aqi_label(today["aqi"])
+    aqi_lbl2, aqi_col2 = aqi_label(tomorrow["aqi"])
+    tips     = advisories(today, tomorrow)
     tip_rows = "".join(
-        f'<tr><td style="font-size:20px;padding:8px 12px;">{emoji}</td>'
-        f'<td style="padding:8px 12px;color:#333;">{text}</td></tr>'
-        for emoji, text in tips
+        f'<tr><td style="padding:5px 0;font-size:13px;color:{t["mut"]};">{e} {tx}</td></tr>'
+        for e, tx in tips
     )
-    suggestions_html = f"""
-  <div class="suggestions">
-    <h3>💡 Suggestions</h3>
-    <table class="sug-table">{tip_rows}</table>
-  </div>""" if tips else ""
-
+    thought_box = (
+        f'<div style="background:{t["c1"]};border-left:3px solid {t["acc"]};'
+        f'border-radius:0 10px 10px 0;padding:12px 16px;margin-bottom:20px;'
+        f'font-style:italic;color:{t["mut"]};font-size:13px;">'
+        f'<div style="font-style:normal;font-size:10px;font-weight:700;color:{t["acc"]};'
+        f'letter-spacing:1px;text-transform:uppercase;margin-bottom:5px;">Thought of the Day</div>'
+        f'{thought}</div>'
+    ) if thought else ""
+    shadow = "0 4px 24px rgba(0,0,0,0.35)" if t["dark"] else "0 8px 32px rgba(0,0,0,0.10)"
     return f"""
-  <h2>🌤️ {city_name} Weather</h2>
-  <table>
-    <thead><tr><th></th><th>☀️ TODAY</th><th>📅 TOMORROW</th></tr></thead>
-    <tbody>
-      <tr><td class="label-col">🌡️ High</td><td>{today['high']}°C</td><td>{tomorrow['high']}°C</td></tr>
-      <tr><td class="label-col">🥵 Feels Like</td><td>{today['feels']}°C</td><td>{tomorrow['feels']}°C</td></tr>
-      <tr><td class="label-col">❄️ Low</td><td>{today['low']}°C</td><td>{tomorrow['low']}°C</td></tr>
-      <tr><td class="label-col">🌧️ Rain Chance</td><td>{today['rain']}%</td><td>{tomorrow['rain']}%</td></tr>
-      <tr><td class="label-col">🌅 Sunrise</td><td>{today['sunrise']}</td><td>{tomorrow['sunrise']}</td></tr>
-      <tr><td class="label-col">🌇 Sunset</td><td>{today['sunset']}</td><td>{tomorrow['sunset']}</td></tr>
-      <tr>
-        <td class="label-col">💨 AQI</td>
-        <td style="color:{aqi_t_color};font-weight:bold;">{aqi_t_label}</td>
-        <td style="color:{aqi_tmr_color};font-weight:bold;">{aqi_tmr_label}</td>
-      </tr>
-    </tbody>
-  </table>{suggestions_html}"""
-
-def build_html(city_data_list, thought, name=""):
-    tables = "\n".join(weather_section_html(name, today, tmr) for name, today, tmr in city_data_list)
-    return f"""<!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8">
-<style>
-  body {{ font-family: Arial, sans-serif; background: #f0f4f8; margin: 0; padding: 20px; }}
-  .card {{ background: #ffffff; border-radius: 16px; max-width: 620px; margin: 0 auto;
-           padding: 28px; box-shadow: 0 4px 16px rgba(0,0,0,0.10); }}
-  .thought-box {{ background: #eef4ff; border-left: 5px solid #4a90d9; border-radius: 0 10px 10px 0;
-                  padding: 14px 18px; margin-bottom: 28px; font-style: italic; color: #2c3e50; }}
-  .thought-box .label {{ font-style: normal; font-weight: bold; font-size: 13px;
-                          color: #4a90d9; text-transform: uppercase; margin-bottom: 6px; }}
-  h2 {{ color: #2c3e50; margin: 24px 0 14px 0; font-size: 20px; }}
-  h2:first-of-type {{ margin-top: 0; }}
-  table {{ width: 100%; border-collapse: collapse; border-radius: 10px; overflow: hidden; margin-bottom: 8px; }}
-  thead th {{ background: #2c3e50; color: #fff; padding: 12px 16px; font-size: 15px; }}
-  thead th:first-child {{ text-align: left; }}
-  thead th:not(:first-child) {{ text-align: center; }}
-  tbody td {{ padding: 11px 16px; border-bottom: 1px solid #ecf0f1; color: #2c3e50; font-size: 14px; }}
-  tbody td:not(:first-child) {{ text-align: center; }}
-  tbody tr:last-child td {{ border-bottom: none; }}
-  tbody tr:nth-child(even) {{ background: #f8fafc; }}
-  .label-col {{ font-weight: 600; color: #555; }}
-  .suggestions {{ margin-top: 16px; }}
-  .suggestions h3 {{ margin: 0 0 10px 0; font-size: 16px; color: #2c3e50; }}
-  .sug-table {{ width: 100%; border-collapse: collapse; }}
-  .sug-table td {{ padding: 8px 12px; vertical-align: middle; }}
-  .sug-table tr:nth-child(odd) {{ background: #fff8e1; }}
-  .sug-table tr:nth-child(even) {{ background: #fdecea; }}
-</style>
-</head>
-<body>
-<div class="card">
-  {f'<p style="font-size:16px;color:#2c3e50;margin:0 0 20px 0;">Dear {name},</p>' if name else ""}
-  <div class="thought-box">
-    <div class="label">💡 Thought of the Day</div>
-    {thought}
+<div style="background:{t['grad']};border-radius:20px;padding:28px 24px;margin-bottom:20px;
+            box-shadow:{shadow};font-family:Arial,sans-serif;">
+  {thought_box}
+  <div style="text-align:center;margin-bottom:16px;">
+    <div style="font-size:22px;font-weight:800;color:{t['txt']};">{city_name}</div>
+    <div style="font-size:13px;color:{t['sub']};margin-top:2px;">{desc}</div>
   </div>
-  {tables}
-</div>
-</body>
-</html>"""
+  <div style="text-align:center;margin-bottom:4px;">
+    <div style="font-size:76px;line-height:1.1;">{icon}</div>
+    <div style="font-size:54px;font-weight:300;color:{t['tmp']};margin-top:8px;">{today['temp_now']}°<span style="font-size:22px;color:{t['sub']};">C</span></div>
+    <div style="font-size:13px;color:{t['sub']};margin-top:4px;">H:{today['high']}° &nbsp; Feels {today['feels']}° &nbsp; L:{today['low']}°</div>
+  </div>
+  <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:separate;border-spacing:8px;margin:20px 0;">
+    <tr>
+      <td style="background:{t['c1']};border-radius:14px;padding:14px 8px;text-align:center;width:33%;">
+        <div style="font-size:20px;">🌧️</div>
+        <div style="font-size:16px;font-weight:700;color:{t['acc']};margin:4px 0;">{today['rain']}%</div>
+        <div style="font-size:11px;color:{t['sub']};">Precipitation</div>
+      </td>
+      <td style="background:{t['c1']};border-radius:14px;padding:14px 8px;text-align:center;width:33%;">
+        <div style="font-size:20px;">💧</div>
+        <div style="font-size:16px;font-weight:700;color:{t['acc']};margin:4px 0;">{today['humid_now']}%</div>
+        <div style="font-size:11px;color:{t['sub']};">Humidity</div>
+      </td>
+      <td style="background:{t['c1']};border-radius:14px;padding:14px 8px;text-align:center;width:33%;">
+        <div style="font-size:20px;">💨</div>
+        <div style="font-size:16px;font-weight:700;color:{t['acc']};margin:4px 0;">{today['wind_now']} km/h</div>
+        <div style="font-size:11px;color:{t['sub']};">Wind Speed</div>
+      </td>
+    </tr>
+  </table>
+  <div style="background:{t['c1']};border-radius:16px;padding:16px;">
+    <div style="font-size:11px;color:{t['sub']};font-weight:700;letter-spacing:1px;text-transform:uppercase;">Today — Hourly</div>
+    {hourly_strip(today, t)}
+  </div>
+  <div style="background:{t['c1']};border-radius:16px;padding:14px 18px;margin-top:10px;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
+      <tr>
+        <td style="font-size:11px;color:{t['sub']};font-weight:700;letter-spacing:1px;text-transform:uppercase;">Tomorrow</td>
+        <td style="text-align:right;"><span style="font-size:20px;">{tmr_icon}</span>
+          <span style="font-size:14px;color:{t['mut']};margin-left:6px;">H:{tomorrow['high']}° L:{tomorrow['low']}°</span></td>
+      </tr>
+    </table>
+  </div>
+  <div style="background:{t['c1']};border-radius:16px;padding:14px 18px;margin-top:10px;">
+    <div style="font-size:11px;color:{t['sub']};font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;">Air Quality (AQI)</div>
+    <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
+      <tr><td style="font-size:13px;color:{t['mut']};">Today</td><td style="text-align:right;font-weight:700;color:{aqi_col};">{aqi_lbl}</td></tr>
+      <tr><td style="font-size:13px;color:{t['mut']};padding-top:4px;">Tomorrow</td><td style="text-align:right;font-weight:700;color:{aqi_col2};padding-top:4px;">{aqi_lbl2}</td></tr>
+    </table>
+  </div>
+  <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:separate;border-spacing:8px;margin-top:10px;">
+    <tr>
+      <td style="background:{t['c2']};border-radius:12px;padding:12px;text-align:center;">
+        <div style="font-size:18px;">🌅</div>
+        <div style="font-size:14px;font-weight:700;color:{t['acc2']};margin:3px 0;">{today['sunrise']}</div>
+        <div style="font-size:11px;color:{t['sub']};">Sunrise</div>
+      </td>
+      <td style="background:{t['c2']};border-radius:12px;padding:12px;text-align:center;">
+        <div style="font-size:18px;">🌇</div>
+        <div style="font-size:14px;font-weight:700;color:{t['acc2']};margin:3px 0;">{today['sunset']}</div>
+        <div style="font-size:11px;color:{t['sub']};">Sunset</div>
+      </td>
+    </tr>
+  </table>
+  {f'''<div style="background:{t["c2"]};border:1px solid {t["bdr"]};border-radius:14px;padding:14px 16px;margin-top:10px;">
+    <div style="font-size:11px;color:{t["acc"]};font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;">Suggestions</div>
+    <table cellpadding="0" cellspacing="0" style="border-collapse:collapse;width:100%;">{tip_rows}</table>
+  </div>''' if tips else ""}
+</div>"""
+
+def build_html(city_data_list, thought, recipient_name="", theme=None):
+    t = theme or THEMES[0]
+    name = recipient_name
+    sections = ""
+    for i, (city_name, today, tmr) in enumerate(city_data_list):
+        sections += city_card(city_name, today, tmr, t, thought if i == 0 else None)
+    txt_color = t["txt"]
+    return f"""<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:16px;background:{t['body']};font-family:Arial,sans-serif;">
+<div style="max-width:560px;margin:0 auto;">
+  {f'<p style="color:{txt_color};font-size:15px;margin:0 0 16px 10px;">Dear {name},</p>' if name else ""}
+  {sections}
+</div></body></html>"""
 
 def build_plain(city_data_list, thought, name=""):
     lines = ([f"Dear {name},", ""] if name else []) + ["💡 THOUGHT OF THE DAY", f"   {thought}", ""]
@@ -248,8 +336,10 @@ for recipient in RECIPIENTS:
     city_data_list = [(city, *city_cache[city]) for city in cities]
     city_label     = " & ".join(cities)
     subject        = f"🌤️ Weather Report ({city_label}) — {today_date} & {tomorrow_date}"
-    plain          = build_plain(city_data_list, thought, recipient.get("name", ""))
-    html           = build_html(city_data_list, thought, recipient.get("name", ""))
-    print(f"Sending to {recipient['email']} ({city_label})...")
+    name           = recipient.get("name", "")
+    theme          = pick_theme(city_data_list)
+    plain          = build_plain(city_data_list, thought, name)
+    html           = build_html(city_data_list, thought, name, theme)
+    print(f"Sending to {recipient['email']} ({city_label}) [{theme['name']}]...")
     print(plain)
     send_email(recipient["email"], subject, plain, html)
