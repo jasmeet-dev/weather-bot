@@ -9,6 +9,16 @@ from datetime import datetime, timedelta
 
 LOG_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "logs", "email_log.csv")
 
+def already_sent_today(email):
+    if not os.path.exists(LOG_FILE):
+        return False
+    today = datetime.now().strftime("%Y-%m-%d")
+    with open(LOG_FILE, newline="") as f:
+        for row in csv.DictReader(f):
+            if row.get("email") == email and row.get("timestamp", "").startswith(today) and row.get("status") == "sent":
+                return True
+    return False
+
 def log_email(name, email, city_data_list, status="sent"):
     os.makedirs(os.path.dirname(LOG_FILE), exist_ok=True)
     write_header = not os.path.exists(LOG_FILE) or os.path.getsize(LOG_FILE) == 0
@@ -374,6 +384,9 @@ for recipient in RECIPIENTS:
     plain          = build_plain(city_data_list, thought, name)
     html           = build_html(city_data_list, thought, name)
     themes_used    = "+".join(theme_for_code(t.get("code_now",0))["name"] for _,t,_ in city_data_list)
+    if recipient["email"] != EMAIL_ADDRESS and already_sent_today(recipient["email"]):
+        print(f"Skipping {recipient['email']} — already sent today.")
+        continue
     print(f"Sending to {recipient['email']} ({city_label}) [{themes_used}]...")
     print(plain)
     try:
