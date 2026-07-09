@@ -41,12 +41,12 @@ EMAIL_ADDRESS = "jasmeet27ghotra@gmail.com"
 EMAIL_PASSWORD = os.environ.get("EMAIL_PASSWORD", "shrm zocd cjut xbzi")
 
 RECIPIENTS = [
-    {"name": "Jasmeet",   "email": "jasmeet27ghotra@gmail.com",     "cities": ["Gurgaon", "Mohali"]},
-    {"name": "Harsh",     "email": "harshsingh94@gmail.com",         "cities": ["Gurgaon", "Mohali"]},
-    {"name": "Sukhwinder","email": "sukhwinder.singhepfo@gmail.com", "cities": ["Gurgaon", "Mohali"]},
-    {"name": "Jasbir",    "email": "kjasbirkaur@gmail.com",          "cities": ["Mohali"]},
-    {"name": "Gazaldeep", "email": "Gazaldeep.gk@gmail.com",         "cities": ["Mohali"]},
-    {"name": "Abhijeet",  "email": "Abhijeetpnwr@gmail.com",         "cities": ["Mohali"]},
+    {"name": "Jasmeet",    "email": "jasmeet27ghotra@gmail.com",     "cities": ["Gurgaon", "Mohali"], "daily_limit": False},
+    {"name": "Harsh",      "email": "harshsingh94@gmail.com",         "cities": ["Gurgaon", "Mohali"], "daily_limit": True},
+    {"name": "Sukhwinder", "email": "sukhwinder.singhepfo@gmail.com", "cities": ["Gurgaon", "Mohali"], "daily_limit": True},
+    {"name": "Jasbir",     "email": "kjasbirkaur@gmail.com",          "cities": ["Mohali"],             "daily_limit": True},
+    {"name": "Gazaldeep",  "email": "Gazaldeep.gk@gmail.com",         "cities": ["Mohali"],             "daily_limit": True},
+    {"name": "Abhijeet",   "email": "Abhijeetpnwr@gmail.com",         "cities": ["Mohali"],             "daily_limit": True},
 ]
 
 CITIES = {
@@ -384,7 +384,7 @@ for recipient in RECIPIENTS:
     plain          = build_plain(city_data_list, thought, name)
     html           = build_html(city_data_list, thought, name)
     themes_used    = "+".join(theme_for_code(t.get("code_now",0))["name"] for _,t,_ in city_data_list)
-    if recipient["email"] != EMAIL_ADDRESS and already_sent_today(recipient["email"]):
+    if recipient.get("daily_limit") and already_sent_today(recipient["email"]):
         print(f"Skipping {recipient['email']} — already sent today.")
         continue
     print(f"Sending to {recipient['email']} ({city_label}) [{themes_used}]...")
