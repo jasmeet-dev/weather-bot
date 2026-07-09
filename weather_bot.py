@@ -139,8 +139,7 @@ def advisories(today, tomorrow):
         tips.append(("🌞", "UV is high — sunscreen mandatory if outdoors."))
     return tips
 
-def pick_theme(city_data_list):
-    code = city_data_list[0][1].get("code_now", 0)
+def theme_for_code(code):
     if code == 0:                             return WEATHER_THEMES["sunny"]
     if code in (1, 2):                        return WEATHER_THEMES["pcloudy"]
     if code == 3:                             return WEATHER_THEMES["overcast"]
@@ -268,16 +267,18 @@ def city_card(city_name, today, tomorrow, t, thought=None):
   </div>''' if tips else ""}
 </div>"""
 
-def build_html(city_data_list, thought, recipient_name="", theme=None):
-    t = theme or WEATHER_THEMES["pcloudy"]
+def build_html(city_data_list, thought, recipient_name=""):
     name = recipient_name
     sections = ""
+    first_theme = theme_for_code(city_data_list[0][1].get("code_now", 0))
     for i, (city_name, today, tmr) in enumerate(city_data_list):
+        t = theme_for_code(today.get("code_now", 0))
         sections += city_card(city_name, today, tmr, t, thought if i == 0 else None)
-    txt_color = t["txt"]
+    body_bg = first_theme["body"]
+    txt_color = first_theme["txt"]
     return f"""<!DOCTYPE html>
 <html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-<body style="margin:0;padding:16px;background:{t['body']};font-family:Arial,sans-serif;">
+<body style="margin:0;padding:16px;background:{body_bg};font-family:Arial,sans-serif;">
 <div style="max-width:560px;margin:0 auto;">
   {f'<p style="color:{txt_color};font-size:15px;margin:0 0 16px 10px;">Dear {name},</p>' if name else ""}
   {sections}
@@ -349,9 +350,9 @@ for recipient in RECIPIENTS:
     city_label     = " & ".join(cities)
     subject        = f"🌤️ Weather Report ({city_label}) — {today_date} & {tomorrow_date}"
     name           = recipient.get("name", "")
-    theme          = pick_theme(city_data_list)
     plain          = build_plain(city_data_list, thought, name)
-    html           = build_html(city_data_list, thought, name, theme)
-    print(f"Sending to {recipient['email']} ({city_label}) [{theme['name']}]...")
+    html           = build_html(city_data_list, thought, name)
+    themes_used    = "+".join(theme_for_code(t.get("code_now",0))["name"] for _,t,_ in city_data_list)
+    print(f"Sending to {recipient['email']} ({city_label}) [{themes_used}]...")
     print(plain)
     send_email(recipient["email"], subject, plain, html)
