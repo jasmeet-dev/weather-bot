@@ -1,0 +1,14 @@
+{
+  "recipients": [
+    {"name": "Jasmeet",    "email": "jasmeet27ghotra@gmail.com",     "cities": ["Gurgaon", "Mohali"], "daily_limit": false, "send_hour": 8},
+    {"name": "Harsh",      "email": "harshsingh94@gmail.com",         "cities": ["Gurgaon", "Mohali"], "daily_limit": true,  "send_hour": 8},
+    {"name": "Sukhwinder", "email": "sukhwinder.singhepfo@gmail.com", "cities": ["Gurgaon", "Mohali"], "daily_limit": true,  "send_hour": 8},
+    {"name": "Jasbir",     "email": "kjasbirkaur@gmail.com",          "cities": ["Mohali"],             "daily_limit": true,  "send_hour": 8},
+    {"name": "Gazaldeep",  "email": "Gazaldeep.gk@gmail.com",         "cities": ["Mohali"],             "daily_limit": true,  "send_hour": 8},
+    {"name": "Abhijeet",   "email": "Abhijeetpnwr@gmail.com",         "cities": ["Mohali"],             "daily_limit": true,  "send_hour": 8}
+  ],
+  "cities": {
+    "Gurgaon": {"lat": 28.46, "lon": 77.03, "aqi_points": [[28.46, 77.03]]},
+    "Mohali":  {"lat": 30.67, "lon": 76.76, "aqi_points": [[30.70, 76.72], [30.67, 76.76], [30.64, 76.82]]}
+  }
+}

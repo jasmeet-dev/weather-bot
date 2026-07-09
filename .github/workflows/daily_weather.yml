@@ -2,8 +2,16 @@ name: Daily Weather Report
 
 on:
   schedule:
-    - cron: "30 2 * * *"  # 8:00 AM IST (UTC+5:30)
+    - cron: "30 1 * * *"   # 7:00 AM IST
+    - cron: "30 2 * * *"   # 8:00 AM IST
+    - cron: "30 3 * * *"   # 9:00 AM IST
+    - cron: "30 4 * * *"   # 10:00 AM IST
+    - cron: "30 5 * * *"   # 11:00 AM IST
   workflow_dispatch:
+    inputs:
+      manual_run:
+        description: "Set to 1 to bypass hour check"
+        default: "1"
 
 jobs:
   send-report:
@@ -19,12 +27,14 @@ jobs:
       - name: Run weather bot
         env:
           EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
+          MANUAL_RUN: ${{ github.event.inputs.manual_run || '0' }}
         run: python3 weather_bot.py
 
       - name: Commit email log
         run: |
           git config user.name "Weather Bot"
           git config user.email "bot@weather"
+          git pull --rebase
           git add logs/email_log.csv
-          git diff --cached --quiet || git commit -m "📧 Log: $(date +'%Y-%m-%d') email run"
+          git diff --cached --quiet || git commit -m "📧 Log: $(date +'%Y-%m-%d %H:%M') run"
           git push

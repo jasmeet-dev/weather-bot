@@ -37,26 +37,27 @@ def log_email(name, email, city_data_list, status="sent"):
                 status,
             ])
 
+import json
+
 EMAIL_ADDRESS = "jasmeet27ghotra@gmail.com"
 EMAIL_PASSWORD = os.environ.get("EMAIL_PASSWORD", "shrm zocd cjut xbzi")
 
-RECIPIENTS = [
-    {"name": "Jasmeet",    "email": "jasmeet27ghotra@gmail.com",     "cities": ["Gurgaon", "Mohali"], "daily_limit": False},
-    {"name": "Harsh",      "email": "harshsingh94@gmail.com",         "cities": ["Gurgaon", "Mohali"], "daily_limit": True},
-    {"name": "Sukhwinder", "email": "sukhwinder.singhepfo@gmail.com", "cities": ["Gurgaon", "Mohali"], "daily_limit": True},
-    {"name": "Jasbir",     "email": "kjasbirkaur@gmail.com",          "cities": ["Mohali"],             "daily_limit": True},
-    {"name": "Gazaldeep",  "email": "Gazaldeep.gk@gmail.com",         "cities": ["Mohali"],             "daily_limit": True},
-    {"name": "Abhijeet",   "email": "Abhijeetpnwr@gmail.com",         "cities": ["Mohali"],             "daily_limit": True},
-]
+CONFIG_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "config.json")
 
-CITIES = {
-    "Gurgaon": {"lat": 28.46, "lon": 77.03, "aqi_points": [(28.46, 77.03)]},
-    "Mohali":  {"lat": 30.67, "lon": 76.76, "aqi_points": [
-        (30.70, 76.72),  # Sector 64-70
-        (30.67, 76.76),  # Sector 80-85
-        (30.64, 76.82),  # Zirakpur
-    ]},
-}
+def load_config():
+    with open(CONFIG_FILE) as f:
+        cfg = json.load(f)
+    recipients = cfg["recipients"]
+    cities = {
+        name: {
+            "lat": v["lat"], "lon": v["lon"],
+            "aqi_points": [tuple(p) for p in v["aqi_points"]]
+        }
+        for name, v in cfg["cities"].items()
+    }
+    return recipients, cities
+
+RECIPIENTS, CITIES = load_config()
 
 PM25_BREAKPOINTS = [
     (0.0, 12.0, 0, 50), (12.1, 35.4, 51, 100),
@@ -384,6 +385,11 @@ for recipient in RECIPIENTS:
     plain          = build_plain(city_data_list, thought, name)
     html           = build_html(city_data_list, thought, name)
     themes_used    = "+".join(theme_for_code(t.get("code_now",0))["name"] for _,t,_ in city_data_list)
+    manual_run = os.environ.get("MANUAL_RUN") == "1"
+    send_hour  = recipient.get("send_hour", 8)
+    if not manual_run and datetime.now().hour != send_hour:
+        print(f"Skipping {recipient['email']} — send hour is {send_hour}:00 IST.")
+        continue
     if recipient.get("daily_limit") and already_sent_today(recipient["email"]):
         print(f"Skipping {recipient['email']} — already sent today.")
         continue

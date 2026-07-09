@@ -1,0 +1,250 @@
+import json
+import os
+import subprocess
+import csv
+from datetime import datetime
+import streamlit as st
+
+BASE   = os.path.dirname(os.path.abspath(__file__))
+CONFIG = os.path.join(BASE, "config.json")
+LOG    = os.path.join(BASE, "logs", "email_log.csv")
+OWNER  = "jasmeet27ghotra@gmail.com"
+
+st.set_page_config(page_title="Weather Bot", page_icon="🌤️", layout="wide")
+
+# ── helpers ──────────────────────────────────────────────────────────────────
+def load_config():
+    with open(CONFIG) as f:
+        return json.load(f)
+
+def save_config(cfg):
+    with open(CONFIG, "w") as f:
+        json.dump(cfg, f, indent=2)
+    st.success("Config saved!")
+
+def run_bot(manual=True):
+    env = os.environ.copy()
+    if manual:
+        env["MANUAL_RUN"] = "1"
+    result = subprocess.run(
+        ["python3", os.path.join(BASE, "weather_bot.py")],
+        capture_output=True, text=True, env=env
+    )
+    return result.stdout, result.stderr
+
+# ── sidebar ───────────────────────────────────────────────────────────────────
+st.sidebar.image("https://img.icons8.com/fluency/96/partly-cloudy-day.png", width=60)
+st.sidebar.title("🌤️ Weather Bot")
+st.sidebar.caption("Control panel")
+page = st.sidebar.radio("", ["📋 Recipients", "🏙️ Cities", "▶️ Run / Test", "📊 Logs"])
+
+cfg = load_config()
+
+# ══════════════════════════════════════════════════════════════════════════════
+# PAGE 1 — RECIPIENTS
+# ══════════════════════════════════════════════════════════════════════════════
+if page == "📋 Recipients":
+    st.title("📋 Recipients")
+    st.caption("Add, edit or remove people who receive the daily weather email.")
+
+    city_names = list(cfg["cities"].keys())
+    hours      = list(range(6, 13))   # 6 AM – 12 PM
+
+    for i, r in enumerate(cfg["recipients"]):
+        with st.expander(f"{'👑 ' if r['email']==OWNER else '👤 '}{r['name']}  —  {r['email']}", expanded=False):
+            col1, col2 = st.columns(2)
+            r["name"]  = col1.text_input("Name",  r["name"],  key=f"name_{i}")
+            r["email"] = col2.text_input("Email", r["email"], key=f"email_{i}")
+
+            r["cities"] = st.multiselect(
+                "Cities", city_names, default=r.get("cities", []), key=f"cities_{i}"
+            )
+
+            col3, col4 = st.columns(2)
+            r["send_hour"] = col3.selectbox(
+                "Send time (IST)", hours,
+                index=hours.index(r.get("send_hour", 8)), key=f"hour_{i}",
+                format_func=lambda h: f"{h}:00 AM" if h < 12 else "12:00 PM"
+            )
+            is_owner = r["email"] == OWNER
+            r["daily_limit"] = not col4.checkbox(
+                "No daily limit (owner)", value=not r.get("daily_limit", True),
+                key=f"limit_{i}", disabled=is_owner
+            ) if not is_owner else False
+
+            if r["email"] != OWNER:
+                if st.button(f"🗑️ Remove {r['name']}", key=f"del_{i}"):
+                    cfg["recipients"].pop(i)
+                    save_config(cfg)
+                    st.rerun()
+
+    st.divider()
+    st.subheader("➕ Add recipient")
+    with st.form("add_recipient"):
+        c1, c2 = st.columns(2)
+        new_name  = c1.text_input("Name")
+        new_email = c2.text_input("Email")
+        new_cities= st.multiselect("Cities", city_names)
+        new_hour  = st.selectbox("Send time (IST)", hours, index=2,
+                                  format_func=lambda h: f"{h}:00 AM")
+        if st.form_submit_button("Add"):
+            if new_name and new_email and new_cities:
+                cfg["recipients"].append({
+                    "name": new_name, "email": new_email,
+                    "cities": new_cities, "daily_limit": True,
+                    "send_hour": new_hour
+                })
+                save_config(cfg)
+                st.rerun()
+            else:
+                st.error("Please fill in name, email and at least one city.")
+
+    if st.button("💾 Save all changes"):
+        save_config(cfg)
+
+# ══════════════════════════════════════════════════════════════════════════════
+# PAGE 2 — CITIES
+# ══════════════════════════════════════════════════════════════════════════════
+elif page == "🏙️ Cities":
+    st.title("🏙️ Cities")
+    st.caption("Manage cities and their coordinates.")
+
+    for city, data in list(cfg["cities"].items()):
+        with st.expander(f"📍 {city}", expanded=False):
+            col1, col2 = st.columns(2)
+            data["lat"] = col1.number_input("Latitude",  value=float(data["lat"]), format="%.4f", key=f"lat_{city}")
+            data["lon"] = col2.number_input("Longitude", value=float(data["lon"]), format="%.4f", key=f"lon_{city}")
+            st.caption("AQI sampling points (lat, lon pairs)")
+            pts_str = st.text_area(
+                "AQI points (one per line: lat,lon)",
+                value="\n".join(f"{p[0]},{p[1]}" for p in data["aqi_points"]),
+                key=f"pts_{city}"
+            )
+            data["aqi_points"] = [
+                [float(x.strip()) for x in line.split(",")]
+                for line in pts_str.strip().splitlines() if "," in line
+            ]
+            if city not in [r for rlist in [r["cities"] for r in cfg["recipients"]] for r in rlist]:
+                if st.button(f"🗑️ Remove {city}", key=f"delcity_{city}"):
+                    del cfg["cities"][city]
+                    save_config(cfg)
+                    st.rerun()
+
+    st.divider()
+    st.subheader("➕ Add city")
+    with st.form("add_city"):
+        c1, c2, c3 = st.columns(3)
+        cname = c1.text_input("City name")
+        clat  = c2.number_input("Latitude",  value=28.46, format="%.4f")
+        clon  = c3.number_input("Longitude", value=77.03, format="%.4f")
+        if st.form_submit_button("Add city"):
+            if cname:
+                cfg["cities"][cname] = {"lat": clat, "lon": clon, "aqi_points": [[clat, clon]]}
+                save_config(cfg)
+                st.rerun()
+
+    if st.button("💾 Save all city changes"):
+        save_config(cfg)
+
+# ══════════════════════════════════════════════════════════════════════════════
+# PAGE 3 — RUN / TEST
+# ══════════════════════════════════════════════════════════════════════════════
+elif page == "▶️ Run / Test":
+    st.title("▶️ Run / Test")
+
+    st.info("**Test email** sends only to you (Jasmeet). **Full run** sends to everyone based on their scheduled time and daily limit.")
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        st.subheader("🧪 Test email — only to me")
+        if st.button("Send test email to Jasmeet", type="primary", use_container_width=True):
+            with st.spinner("Sending..."):
+                env = os.environ.copy()
+                env["MANUAL_RUN"] = "1"
+                result = subprocess.run(
+                    ["python3", "-c",
+                     f"""
+import os, sys
+sys.argv = ['weather_bot.py']
+os.environ['MANUAL_RUN'] = '1'
+exec(open('{os.path.join(BASE, "weather_bot.py")}').read().replace(
+    'for recipient in RECIPIENTS:',
+    'for recipient in [r for r in RECIPIENTS if r["email"] == "jasmeet27ghotra@gmail.com"]:'
+))"""],
+                    capture_output=True, text=True, env=env, cwd=BASE
+                )
+            if result.returncode == 0:
+                st.success("✅ Test email sent to Jasmeet!")
+            else:
+                st.error(f"❌ Error:\n{result.stderr}")
+            if result.stdout:
+                with st.expander("Output"):
+                    st.text(result.stdout)
+
+    with col2:
+        st.subheader("🚀 Full run — all recipients")
+        bypass = st.checkbox("Bypass hour check (send regardless of scheduled time)")
+        if st.button("Run weather bot now", use_container_width=True):
+            with st.spinner("Running bot..."):
+                env = os.environ.copy()
+                if bypass:
+                    env["MANUAL_RUN"] = "1"
+                result = subprocess.run(
+                    ["python3", os.path.join(BASE, "weather_bot.py")],
+                    capture_output=True, text=True, env=env, cwd=BASE
+                )
+            if result.returncode == 0:
+                st.success("✅ Bot run complete!")
+            else:
+                st.error(f"❌ Error:\n{result.stderr}")
+            if result.stdout:
+                with st.expander("Output"):
+                    st.text(result.stdout)
+
+# ══════════════════════════════════════════════════════════════════════════════
+# PAGE 4 — LOGS
+# ══════════════════════════════════════════════════════════════════════════════
+elif page == "📊 Logs":
+    st.title("📊 Email Logs")
+
+    if not os.path.exists(LOG):
+        st.info("No logs yet — logs appear after the first email run.")
+    else:
+        import pandas as pd
+        df = pd.read_csv(LOG)
+        df = df.sort_values("timestamp", ascending=False)
+
+        # Summary metrics
+        today = datetime.now().strftime("%Y-%m-%d")
+        sent_today = df[df["timestamp"].str.startswith(today) & (df["status"] == "sent")]
+
+        col1, col2, col3 = st.columns(3)
+        col1.metric("Total emails sent", len(df[df["status"] == "sent"]))
+        col2.metric("Sent today", len(sent_today))
+        col3.metric("Recipients active", df["email"].nunique())
+
+        st.divider()
+
+        # Filters
+        fc1, fc2 = st.columns(2)
+        name_filter  = fc1.multiselect("Filter by name",  df["name"].unique().tolist())
+        city_filter  = fc2.multiselect("Filter by city",  df["cities"].unique().tolist())
+
+        filtered = df.copy()
+        if name_filter: filtered = filtered[filtered["name"].isin(name_filter)]
+        if city_filter: filtered = filtered[filtered["cities"].isin(city_filter)]
+
+        st.dataframe(
+            filtered.style.applymap(
+                lambda v: "color:green;font-weight:bold" if v == "sent"
+                else "color:red" if isinstance(v, str) and "fail" in v else "",
+                subset=["status"]
+            ),
+            use_container_width=True, height=500
+        )
+
+        st.download_button(
+            "⬇️ Download CSV", df.to_csv(index=False),
+            file_name="email_log.csv", mime="text/csv"
+        )
