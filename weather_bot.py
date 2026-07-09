@@ -62,31 +62,6 @@ def fetch_pm25_avg(aqi_points, hour_index):
             readings.append(val)
     return sum(readings) / len(readings) if readings else None
 
-WEATHER_ICON = {
-    0:"☀️",1:"🌤️",2:"⛅",3:"☁️",45:"🌫️",48:"🌫️",
-    51:"🌦️",53:"🌦️",55:"🌦️",61:"🌧️",63:"🌧️",65:"🌧️",
-    71:"🌨️",73:"🌨️",75:"🌨️",80:"🌧️",81:"🌧️",82:"🌧️",
-    95:"⛈️",96:"⛈️",99:"⛈️",
-}
-WEATHER_DESC = {
-    0:"Clear Sky",1:"Mainly Clear",2:"Partly Cloudy",3:"Overcast",
-    45:"Foggy",48:"Foggy",51:"Light Drizzle",53:"Drizzle",55:"Heavy Drizzle",
-    61:"Light Rain",63:"Rain",65:"Heavy Rain",71:"Light Snow",73:"Snow",75:"Heavy Snow",
-    80:"Rain Showers",81:"Rain Showers",82:"Heavy Showers",
-    95:"Thunderstorm",96:"Thunderstorm",99:"Severe Thunderstorm",
-}
-
-THEMES = [
-    {"name":"Midnight Blue",    "dark":True,  "body":"#000d1f", "grad":"linear-gradient(160deg,#000000 0%,#050d1a 50%,#000d1f 100%)", "c1":"rgba(0,100,255,0.2)",    "c2":"rgba(0,212,255,0.1)",  "bdr":"rgba(0,212,255,0.3)",  "acc":"#00d4ff", "acc2":"#0066ff", "mut":"#7dd3fc", "sub":"#0066ff", "txt":"white", "tmp":"#00d4ff"},
-    {"name":"Aurora",           "dark":True,  "body":"#0d0d1a", "grad":"linear-gradient(160deg,#0d0d1a 0%,#1a0a2e 55%,#0a1a28 100%)","c1":"rgba(167,139,250,0.12)", "c2":"rgba(52,211,153,0.1)", "bdr":"rgba(167,139,250,0.3)","acc":"#a78bfa", "acc2":"#34d399", "mut":"#c4b5fd", "sub":"#7c3aed", "txt":"white", "tmp":"#a78bfa"},
-    {"name":"Neon Dark",        "dark":True,  "body":"#0a0a0a", "grad":"linear-gradient(160deg,#0a0a0a 0%,#150010 55%,#0a0a00 100%)", "c1":"rgba(255,0,110,0.15)",   "c2":"rgba(255,0,110,0.1)",  "bdr":"rgba(255,0,110,0.3)",  "acc":"#ff006e", "acc2":"#ffbe0b", "mut":"#ff69b4", "sub":"#cc0057", "txt":"white", "tmp":"#ffbe0b"},
-    {"name":"Dark Teal+Gold",   "dark":True,  "body":"#050f14", "grad":"linear-gradient(160deg,#0a1628 0%,#0d2137 55%,#081520 100%)", "c1":"rgba(0,180,166,0.15)",   "c2":"rgba(255,215,0,0.12)", "bdr":"rgba(255,215,0,0.35)", "acc":"#ffd700", "acc2":"#00b4a6", "mut":"#7dd3c8", "sub":"#00867d", "txt":"white", "tmp":"#ffd700"},
-    {"name":"Crimson Night",    "dark":True,  "body":"#0d0000", "grad":"linear-gradient(160deg,#0d0000 0%,#1a0505 55%,#0d0800 100%)", "c1":"rgba(255,51,51,0.15)",   "c2":"rgba(255,51,51,0.1)",  "bdr":"rgba(255,107,0,0.3)",  "acc":"#ff3333", "acc2":"#ff6b00", "mut":"#ffa07a", "sub":"#cc2200", "txt":"white", "tmp":"#ff6b00"},
-    {"name":"Sky Breeze",       "dark":False, "body":"#e8f4fd", "grad":"linear-gradient(160deg,#ffffff 0%,#dbeafe 60%,#e0f2fe 100%)", "c1":"rgba(59,130,246,0.1)",   "c2":"rgba(59,130,246,0.08)","bdr":"rgba(59,130,246,0.3)", "acc":"#2563eb", "acc2":"#0ea5e9", "mut":"#475569", "sub":"#64748b", "txt":"#1e3a5f","tmp":"#1d4ed8"},
-    {"name":"Tropical Sunrise", "dark":False, "body":"#fff7ed", "grad":"linear-gradient(160deg,#ffffff 0%,#fef3c7 50%,#fce7f3 100%)","c1":"rgba(251,146,60,0.12)",  "c2":"rgba(251,146,60,0.08)","bdr":"rgba(251,146,60,0.35)","acc":"#ea580c", "acc2":"#db2777", "mut":"#78350f", "sub":"#92400e", "txt":"#431407","tmp":"#c2410c"},
-    {"name":"Fresh Mint",       "dark":False, "body":"#f0fdf4", "grad":"linear-gradient(160deg,#ffffff 0%,#dcfce7 55%,#d1fae5 100%)","c1":"rgba(34,197,94,0.12)",   "c2":"rgba(34,197,94,0.08)", "bdr":"rgba(34,197,94,0.3)",  "acc":"#16a34a", "acc2":"#059669", "mut":"#374151", "sub":"#4b5563", "txt":"#14532d","tmp":"#15803d"},
-]
-
 def fetch_city_data(lat, lon, aqi_points):
     resp = requests.get("https://api.open-meteo.com/v1/forecast", params={
         "latitude": lat, "longitude": lon,
@@ -97,7 +72,6 @@ def fetch_city_data(lat, lon, aqi_points):
     daily = resp["daily"]
     h     = resp["hourly"]
     now   = datetime.now().hour
-
     today = {
         "high": daily["temperature_2m_max"][0], "low": daily["temperature_2m_min"][0],
         "rain": daily["precipitation_probability_max"][0], "feels": daily["apparent_temperature_max"][0],
@@ -123,6 +97,31 @@ def fetch_city_data(lat, lon, aqi_points):
     }
     return today, tomorrow
 
+WEATHER_ICON = {
+    0:"☀️",1:"🌤️",2:"⛅",3:"☁️",45:"🌫️",48:"🌫️",
+    51:"🌦️",53:"🌦️",55:"🌦️",61:"🌧️",63:"🌧️",65:"🌧️",
+    71:"🌨️",73:"🌨️",75:"🌨️",80:"🌧️",81:"🌧️",82:"🌧️",
+    95:"⛈️",96:"⛈️",99:"⛈️",
+}
+WEATHER_DESC = {
+    0:"Clear Sky",1:"Mainly Clear",2:"Partly Cloudy",3:"Overcast",
+    45:"Foggy",48:"Foggy",51:"Light Drizzle",53:"Drizzle",55:"Heavy Drizzle",
+    61:"Light Rain",63:"Rain",65:"Heavy Rain",71:"Light Snow",73:"Snow",75:"Heavy Snow",
+    80:"Rain Showers",81:"Rain Showers",82:"Heavy Showers",
+    95:"Thunderstorm",96:"Thunderstorm",99:"Severe Thunderstorm",
+}
+
+WEATHER_THEMES = {
+    "sunny":   {"name":"Sunny",        "dark":False,"body":"#fffbf0","grad":"linear-gradient(160deg,#ffffff 0%,#fef9e7 50%,#fef3c7 100%)","c1":"rgba(251,191,36,0.15)", "c2":"rgba(251,146,60,0.1)", "bdr":"rgba(251,191,36,0.4)","acc":"#d97706","acc2":"#ea580c","mut":"#78350f","sub":"#92400e","txt":"#451a03","tmp":"#b45309"},
+    "pcloudy": {"name":"Partly Cloudy","dark":False,"body":"#f0f9ff","grad":"linear-gradient(160deg,#ffffff 0%,#e0f2fe 55%,#bae6fd 100%)","c1":"rgba(14,165,233,0.12)", "c2":"rgba(14,165,233,0.08)","bdr":"rgba(14,165,233,0.3)","acc":"#0284c7","acc2":"#0ea5e9","mut":"#0c4a6e","sub":"#075985","txt":"#0c4a6e","tmp":"#0369a1"},
+    "overcast":{"name":"Overcast",     "dark":False,"body":"#f8fafc","grad":"linear-gradient(160deg,#ffffff 0%,#f1f5f9 55%,#e2e8f0 100%)","c1":"rgba(100,116,139,0.12)","c2":"rgba(100,116,139,0.08)","bdr":"rgba(100,116,139,0.3)","acc":"#475569","acc2":"#64748b","mut":"#334155","sub":"#64748b","txt":"#1e293b","tmp":"#334155"},
+    "foggy":   {"name":"Foggy",        "dark":False,"body":"#f5f5f0","grad":"linear-gradient(160deg,#fafaf8 0%,#f0f0e8 55%,#e8e8dc 100%)","c1":"rgba(120,113,108,0.12)","c2":"rgba(120,113,108,0.08)","bdr":"rgba(120,113,108,0.25)","acc":"#57534e","acc2":"#78716c","mut":"#44403c","sub":"#78716c","txt":"#1c1917","tmp":"#44403c"},
+    "drizzle": {"name":"Drizzle",      "dark":False,"body":"#eff6ff","grad":"linear-gradient(160deg,#ffffff 0%,#dbeafe 55%,#bfdbfe 100%)","c1":"rgba(59,130,246,0.12)", "c2":"rgba(59,130,246,0.08)","bdr":"rgba(59,130,246,0.3)","acc":"#2563eb","acc2":"#3b82f6","mut":"#1e3a8a","sub":"#1d4ed8","txt":"#1e3a8a","tmp":"#1d4ed8"},
+    "rainy":   {"name":"Rainy",        "dark":True, "body":"#0a0f1e","grad":"linear-gradient(160deg,#0c1445 0%,#1a237e 50%,#0d1b4b 100%)","c1":"rgba(66,165,245,0.15)","c2":"rgba(66,165,245,0.1)","bdr":"rgba(66,165,245,0.3)","acc":"#42a5f5","acc2":"#29b6f6","mut":"#90caf9","sub":"#1565c0","txt":"white","tmp":"#64b5f6"},
+    "snowy":   {"name":"Snowy",        "dark":False,"body":"#f0f8ff","grad":"linear-gradient(160deg,#ffffff 0%,#e8f4fd 50%,#d6eaf8 100%)","c1":"rgba(41,182,246,0.12)", "c2":"rgba(41,182,246,0.08)","bdr":"rgba(41,182,246,0.3)","acc":"#0288d1","acc2":"#29b6f6","mut":"#01579b","sub":"#0277bd","txt":"#01579b","tmp":"#0288d1"},
+    "thunder": {"name":"Thunderstorm", "dark":True, "body":"#0d0d1a","grad":"linear-gradient(160deg,#0d0d1a 0%,#1a0a2e 55%,#0a1a28 100%)","c1":"rgba(167,139,250,0.15)","c2":"rgba(167,139,250,0.08)","bdr":"rgba(167,139,250,0.4)","acc":"#a78bfa","acc2":"#c4b5fd","mut":"#ddd6fe","sub":"#7c3aed","txt":"white","tmp":"#c4b5fd"},
+}
+
 def advisories(today, tomorrow):
     tips = []
     aqi_val = today["aqi"]
@@ -141,13 +140,16 @@ def advisories(today, tomorrow):
     return tips
 
 def pick_theme(city_data_list):
-    dark_themes  = [t for t in THEMES if t["dark"]]
-    light_themes = [t for t in THEMES if not t["dark"]]
-    day = datetime.now().timetuple().tm_yday
-    is_thunder = any(today.get("code_now", 0) in (95, 96, 99)
-                     for _, today, _ in city_data_list)
-    pool = dark_themes if is_thunder else light_themes
-    return pool[day % len(pool)]
+    code = city_data_list[0][1].get("code_now", 0)
+    if code == 0:                             return WEATHER_THEMES["sunny"]
+    if code in (1, 2):                        return WEATHER_THEMES["pcloudy"]
+    if code == 3:                             return WEATHER_THEMES["overcast"]
+    if code in (45, 48):                      return WEATHER_THEMES["foggy"]
+    if code in range(51, 58):                 return WEATHER_THEMES["drizzle"]
+    if code in (*range(61,66),*range(80,83)): return WEATHER_THEMES["rainy"]
+    if code in (*range(71,78), 85, 86):       return WEATHER_THEMES["snowy"]
+    if code in (95, 96, 99):                  return WEATHER_THEMES["thunder"]
+    return WEATHER_THEMES["pcloudy"]
 
 def hourly_strip(today, t):
     slots = [6, 9, 12, 15, 18, 21]
@@ -221,11 +223,11 @@ def city_card(city_name, today, tomorrow, t, thought=None):
     {hourly_strip(today, t)}
   </div>
   <div style="background:{t['c1']};border-radius:16px;padding:14px 18px;margin-top:10px;">
+    <div style="font-size:11px;color:{t['sub']};font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;">Tomorrow</div>
     <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
       <tr>
-        <td style="font-size:11px;color:{t['sub']};font-weight:700;letter-spacing:1px;text-transform:uppercase;">Tomorrow</td>
-        <td style="text-align:right;"><span style="font-size:20px;">{tmr_icon}</span>
-          <span style="font-size:14px;color:{t['mut']};margin-left:6px;">H:{tomorrow['high']}° L:{tomorrow['low']}°</span></td>
+        <td style="font-size:13px;color:{t['mut']};vertical-align:middle;"><span style="font-size:20px;">{tmr_icon}</span>&nbsp; H:{tomorrow['high']}° L:{tomorrow['low']}°</td>
+        <td style="text-align:right;font-size:13px;color:{t['mut']};">🌧️ Rain {tomorrow['rain']}%</td>
       </tr>
     </table>
   </div>
@@ -238,15 +240,25 @@ def city_card(city_name, today, tomorrow, t, thought=None):
   </div>
   <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:separate;border-spacing:8px;margin-top:10px;">
     <tr>
-      <td style="background:{t['c2']};border-radius:12px;padding:12px;text-align:center;">
-        <div style="font-size:18px;">🌅</div>
-        <div style="font-size:14px;font-weight:700;color:{t['acc2']};margin:3px 0;">{today['sunrise']}</div>
-        <div style="font-size:11px;color:{t['sub']};">Sunrise</div>
+      <td style="background:{t['c2']};border-radius:12px;padding:10px 8px;text-align:center;">
+        <div style="font-size:16px;">🌅</div>
+        <div style="font-size:13px;font-weight:700;color:{t['acc2']};margin:2px 0;">{today['sunrise']}</div>
+        <div style="font-size:10px;color:{t['sub']};">Sunrise · Today</div>
       </td>
-      <td style="background:{t['c2']};border-radius:12px;padding:12px;text-align:center;">
-        <div style="font-size:18px;">🌇</div>
-        <div style="font-size:14px;font-weight:700;color:{t['acc2']};margin:3px 0;">{today['sunset']}</div>
-        <div style="font-size:11px;color:{t['sub']};">Sunset</div>
+      <td style="background:{t['c2']};border-radius:12px;padding:10px 8px;text-align:center;">
+        <div style="font-size:16px;">🌇</div>
+        <div style="font-size:13px;font-weight:700;color:{t['acc2']};margin:2px 0;">{today['sunset']}</div>
+        <div style="font-size:10px;color:{t['sub']};">Sunset · Today</div>
+      </td>
+      <td style="background:{t['c2']};border-radius:12px;padding:10px 8px;text-align:center;">
+        <div style="font-size:16px;">🌅</div>
+        <div style="font-size:13px;font-weight:700;color:{t['acc2']};margin:2px 0;">{tomorrow['sunrise']}</div>
+        <div style="font-size:10px;color:{t['sub']};">Sunrise · Tomorrow</div>
+      </td>
+      <td style="background:{t['c2']};border-radius:12px;padding:10px 8px;text-align:center;">
+        <div style="font-size:16px;">🌇</div>
+        <div style="font-size:13px;font-weight:700;color:{t['acc2']};margin:2px 0;">{tomorrow['sunset']}</div>
+        <div style="font-size:10px;color:{t['sub']};">Sunset · Tomorrow</div>
       </td>
     </tr>
   </table>
@@ -257,7 +269,7 @@ def city_card(city_name, today, tomorrow, t, thought=None):
 </div>"""
 
 def build_html(city_data_list, thought, recipient_name="", theme=None):
-    t = theme or THEMES[0]
+    t = theme or WEATHER_THEMES["pcloudy"]
     name = recipient_name
     sections = ""
     for i, (city_name, today, tmr) in enumerate(city_data_list):
