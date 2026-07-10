@@ -333,7 +333,19 @@ def build_html(city_data_list, thought, recipient_name=""):
             f'{icon} {city_name}</a>'
         )
 
-        cards += f'<div id="city_{i}">' + city_card(city_name, today, tmr, t) + '</div>'
+        cards += f'<div><a name="city{i}"></a>' + city_card(city_name, today, tmr, t) + '</div>'
+
+    city_pills = ""
+    if len(city_data_list) > 1:
+        pills = ""
+        for i, (city_name, today, _) in enumerate(city_data_list):
+            t    = theme_for_code(today.get("code_now", 0))
+            icon = WEATHER_ICON.get(today.get("code_now", 0), "🌤️")
+            pills += (f'<a href="#city{i}" style="display:inline-block;padding:8px 20px;margin:0 4px;'
+                      f'border-radius:20px;font-size:13px;font-weight:700;text-decoration:none;'
+                      f'background:{t["c1"]};color:{t["acc"]};border:2px solid {t["bdr"]};">'
+                      f'{icon} {city_name}</a>')
+        city_pills = f'<div style="text-align:center;margin-bottom:20px;">{pills}</div>'
 
     return f"""<!DOCTYPE html>
 <html>
@@ -345,6 +357,7 @@ def build_html(city_data_list, thought, recipient_name=""):
 <div style="max-width:560px;margin:0 auto;padding:16px;">
   {f'<p style="color:{txt_color};font-size:15px;margin:0 0 16px 0;">Dear {name},</p>' if name else ""}
   {thought_box}
+  {city_pills}
   {cards}
 </div>
 </body></html>"""
