@@ -312,40 +312,26 @@ def build_html(city_data_list, thought, recipient_name=""):
                 letter-spacing:1px;text-transform:uppercase;margin-bottom:5px;">Thought of the Day</div>
     {thought}</div>"""
 
-    # Build tab buttons and cards
+    # Build tab buttons and cards — both cities always visible, tabs are jump anchors
     tab_btns = ""
-    city_css  = ""
-    cards     = ""
+    cards    = ""
 
     for i, (city_name, today, tmr) in enumerate(city_data_list):
         t    = theme_for_code(today.get("code_now", 0))
         icon = WEATHER_ICON.get(today.get("code_now", 0), "🌤️")
 
-        # Tab button
         tab_btns += (
-            f'<a href="#city_{i}" onclick="showCity({i});return false;" id="tab_{i}"'
+            f'<a href="#city_{i}" id="tab_{i}"'
             f' style="display:inline-block;padding:9px 18px;margin-right:6px;border-radius:20px;'
-            f'font-size:13px;font-weight:700;text-decoration:none;cursor:pointer;'
+            f'font-size:13px;font-weight:700;text-decoration:none;'
             f'background:{t["c1"]};color:{t["acc"]};border:2px solid {t["bdr"]};">'
             f'{icon} {city_name}</a>'
         )
 
-        # Per-city CSS for :target fallback (no-JS email clients)
-        city_css += f'#city_{i}:target{{display:block!important;}}'
-        if i > 0:
-            # hide city_0 when another is targeted
-            city_css += f'html:has(#city_{i}:target) #city_0{{display:none!important;}}'
+        cards += f'<div id="city_{i}">' + city_card(city_name, today, tmr, t) + '</div>'
 
-        # City card
-        cards += (
-            f'<div id="city_{i}" style="display:{"block" if i==0 else "none"};">'
-            + city_card(city_name, today, tmr, t) +
-            '</div>'
-        )
-
-    # Only show tabs if multiple cities
     tab_bar = "" if len(city_data_list) == 1 else f"""
-<div id="tab-bar" style="position:sticky;top:0;z-index:999;background:{body_bg};
+<div style="position:sticky;top:0;z-index:999;background:{body_bg};
      padding:10px 0 12px 0;margin-bottom:4px;border-bottom:1px solid {first_theme['bdr']};">
   <div style="max-width:560px;margin:0 auto;padding:0 16px;text-align:center;">
     {tab_btns}
@@ -357,10 +343,6 @@ def build_html(city_data_list, thought, recipient_name=""):
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <style>
-    {city_css}
-    .tab-active {{ box-shadow: 0 2px 8px rgba(0,0,0,0.18); }}
-  </style>
 </head>
 <body style="margin:0;padding:0 0 32px 0;background:{body_bg};font-family:Arial,sans-serif;">
 <div style="max-width:560px;margin:0 auto;padding:16px 16px 0 16px;">
@@ -371,18 +353,6 @@ def build_html(city_data_list, thought, recipient_name=""):
 <div style="max-width:560px;margin:0 auto;padding:0 16px;">
   {cards}
 </div>
-<script>
-function showCity(idx) {{
-  var sections = document.querySelectorAll('[id^="city_"]');
-  var tabs     = document.querySelectorAll('[id^="tab_"]');
-  sections.forEach(function(s, i) {{ s.style.display = i===idx ? 'block' : 'none'; }});
-  tabs.forEach(function(b, i) {{
-    b.style.boxShadow = i===idx ? '0 2px 10px rgba(0,0,0,0.25)' : 'none';
-    b.style.opacity   = i===idx ? '1' : '0.65';
-  }});
-}}
-showCity(0);
-</script>
 </body></html>"""
 
 def build_plain(city_data_list, thought, name=""):
