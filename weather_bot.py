@@ -335,14 +335,6 @@ def build_html(city_data_list, thought, recipient_name=""):
 
         cards += f'<div id="city_{i}">' + city_card(city_name, today, tmr, t) + '</div>'
 
-    tab_bar = "" if len(city_data_list) == 1 else f"""
-<div style="position:sticky;top:0;z-index:999;background:{body_bg};
-     padding:10px 0 12px 0;margin-bottom:4px;border-bottom:1px solid {first_theme['bdr']};">
-  <div style="max-width:560px;margin:0 auto;padding:0 16px;text-align:center;">
-    {tab_btns}
-  </div>
-</div>"""
-
     return f"""<!DOCTYPE html>
 <html>
 <head>
@@ -350,12 +342,9 @@ def build_html(city_data_list, thought, recipient_name=""):
   <meta name="viewport" content="width=device-width,initial-scale=1">
 </head>
 <body style="margin:0;padding:0 0 32px 0;background:{body_bg};font-family:Arial,sans-serif;">
-<div style="max-width:560px;margin:0 auto;padding:16px 16px 0 16px;">
+<div style="max-width:560px;margin:0 auto;padding:16px;">
   {f'<p style="color:{txt_color};font-size:15px;margin:0 0 16px 0;">Dear {name},</p>' if name else ""}
   {thought_box}
-</div>
-{tab_bar}
-<div style="max-width:560px;margin:0 auto;padding:0 16px;">
   {cards}
 </div>
 </body></html>"""
