@@ -1,5 +1,6 @@
 import json
 import os
+import sys
 import subprocess
 import csv
 from datetime import datetime
@@ -178,24 +179,27 @@ elif page == "▶️ Run / Test":
     def bot_env(manual=False):
         env = os.environ.copy()
         for key, val in st.secrets.items():
-            env[key] = val
+            env[key] = str(val)
         if manual:
             env["MANUAL_RUN"] = "1"
         return env
+
+    python = sys.executable
 
     with col1:
         st.subheader("🧪 Test email — only to me")
         if st.button("Send test email to Jasmeet", type="primary", use_container_width=True):
             with st.spinner("Sending..."):
+                owner = st.secrets.get("JASMEET_EMAIL", "jasmeet27ghotra@gmail.com")
                 result = subprocess.run(
-                    ["python3", "-c",
+                    [python, "-c",
                      f"""
 import os, sys
 sys.argv = ['weather_bot.py']
 os.environ['MANUAL_RUN'] = '1'
 exec(open('{os.path.join(BASE, "weather_bot.py")}').read().replace(
     'for recipient in RECIPIENTS:',
-    'for recipient in [r for r in RECIPIENTS if r["email"] == "jasmeet27ghotra@gmail.com"]:'
+    'for recipient in [r for r in RECIPIENTS if r["email"] == "{owner}"]:'
 ))"""],
                     capture_output=True, text=True, env=bot_env(manual=True), cwd=BASE
                 )
@@ -213,7 +217,7 @@ exec(open('{os.path.join(BASE, "weather_bot.py")}').read().replace(
         if st.button("Run weather bot now", use_container_width=True):
             with st.spinner("Running bot..."):
                 result = subprocess.run(
-                    ["python3", os.path.join(BASE, "weather_bot.py")],
+                    [python, os.path.join(BASE, "weather_bot.py")],
                     capture_output=True, text=True, env=bot_env(manual=bypass), cwd=BASE
                 )
             if result.returncode == 0:
