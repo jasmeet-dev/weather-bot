@@ -288,7 +288,7 @@ elif page == "📊 Logs":
         if city_filter: filtered = filtered[filtered["cities"].isin(city_filter)]
 
         st.dataframe(
-            filtered.style.applymap(
+            filtered.style.map(
                 lambda v: "color:green;font-weight:bold" if v == "sent"
                 else "color:red" if isinstance(v, str) and "fail" in v else "",
                 subset=["status"]
