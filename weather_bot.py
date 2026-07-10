@@ -39,7 +39,7 @@ def log_email(name, email, city_data_list, status="sent"):
 
 import json
 
-EMAIL_ADDRESS = "jasmeet27ghotra@gmail.com"
+EMAIL_ADDRESS = os.environ.get("EMAIL_ADDRESS", "")
 EMAIL_PASSWORD = os.environ.get("EMAIL_PASSWORD", "")
 
 CONFIG_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "config.json")
@@ -47,6 +47,11 @@ CONFIG_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "config.j
 def load_config():
     with open(CONFIG_FILE) as f:
         cfg = json.load(f)
+    # Replace email placeholders with real values from environment
+    for r in cfg["recipients"]:
+        key = r["email"]
+        if key.endswith("_EMAIL"):
+            r["email"] = os.environ.get(key, key)
     recipients = cfg["recipients"]
     cities = {
         name: {

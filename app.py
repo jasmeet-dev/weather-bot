@@ -177,7 +177,8 @@ elif page == "▶️ Run / Test":
 
     def bot_env(manual=False):
         env = os.environ.copy()
-        env["EMAIL_PASSWORD"] = st.secrets.get("EMAIL_PASSWORD", "")
+        for key, val in st.secrets.items():
+            env[key] = val
         if manual:
             env["MANUAL_RUN"] = "1"
         return env
