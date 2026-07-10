@@ -40,7 +40,7 @@ def log_email(name, email, city_data_list, status="sent"):
 import json
 
 EMAIL_ADDRESS = "jasmeet27ghotra@gmail.com"
-EMAIL_PASSWORD = os.environ.get("EMAIL_PASSWORD", "shrm zocd cjut xbzi")
+EMAIL_PASSWORD = os.environ.get("EMAIL_PASSWORD", "")
 
 CONFIG_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "config.json")
 
