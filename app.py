@@ -175,12 +175,17 @@ elif page == "▶️ Run / Test":
 
     col1, col2 = st.columns(2)
 
+    def bot_env(manual=False):
+        env = os.environ.copy()
+        env["EMAIL_PASSWORD"] = st.secrets.get("EMAIL_PASSWORD", "")
+        if manual:
+            env["MANUAL_RUN"] = "1"
+        return env
+
     with col1:
         st.subheader("🧪 Test email — only to me")
         if st.button("Send test email to Jasmeet", type="primary", use_container_width=True):
             with st.spinner("Sending..."):
-                env = os.environ.copy()
-                env["MANUAL_RUN"] = "1"
                 result = subprocess.run(
                     ["python3", "-c",
                      f"""
@@ -191,7 +196,7 @@ exec(open('{os.path.join(BASE, "weather_bot.py")}').read().replace(
     'for recipient in RECIPIENTS:',
     'for recipient in [r for r in RECIPIENTS if r["email"] == "jasmeet27ghotra@gmail.com"]:'
 ))"""],
-                    capture_output=True, text=True, env=env, cwd=BASE
+                    capture_output=True, text=True, env=bot_env(manual=True), cwd=BASE
                 )
             if result.returncode == 0:
                 st.success("✅ Test email sent to Jasmeet!")
@@ -206,12 +211,9 @@ exec(open('{os.path.join(BASE, "weather_bot.py")}').read().replace(
         bypass = st.checkbox("Bypass hour check (send regardless of scheduled time)")
         if st.button("Run weather bot now", use_container_width=True):
             with st.spinner("Running bot..."):
-                env = os.environ.copy()
-                if bypass:
-                    env["MANUAL_RUN"] = "1"
                 result = subprocess.run(
                     ["python3", os.path.join(BASE, "weather_bot.py")],
-                    capture_output=True, text=True, env=env, cwd=BASE
+                    capture_output=True, text=True, env=bot_env(manual=bypass), cwd=BASE
                 )
             if result.returncode == 0:
                 st.success("✅ Bot run complete!")
