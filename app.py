@@ -171,62 +171,88 @@ elif page == "🏙️ Cities":
 # ══════════════════════════════════════════════════════════════════════════════
 elif page == "▶️ Run / Test":
     st.title("▶️ Run / Test")
-
     st.info("**Test email** sends only to you (Jasmeet). **Full run** sends to everyone based on their scheduled time and daily limit.")
 
-    col1, col2 = st.columns(2)
-
-    def bot_env(manual=False):
-        env = os.environ.copy()
+    def inject_secrets():
         for key, val in st.secrets.items():
-            env[key] = str(val)
-        if manual:
-            env["MANUAL_RUN"] = "1"
-        return env
+            os.environ[key] = str(val)
 
-    python = sys.executable
+    def run_bot(test_only=False, bypass_hour=False):
+        inject_secrets()
+        if bypass_hour:
+            os.environ["MANUAL_RUN"] = "1"
+        elif "MANUAL_RUN" in os.environ:
+            del os.environ["MANUAL_RUN"]
+
+        sys.path.insert(0, BASE)
+        import importlib, io, contextlib
+        import weather_bot as wb
+        importlib.reload(wb)
+
+        log = io.StringIO()
+        errors = []
+        sent = []
+
+        owner_email = st.secrets.get("JASMEET_EMAIL", "jasmeet27ghotra@gmail.com")
+        recipients = [r for r in wb.RECIPIENTS if not test_only or r["email"] == owner_email]
+
+        from datetime import datetime, timedelta
+        today_date    = datetime.now().strftime("%d/%m/%Y")
+        tomorrow_date = (datetime.now() + timedelta(days=1)).strftime("%d/%m/%Y")
+
+        for recipient in recipients:
+            manual = os.environ.get("MANUAL_RUN") == "1"
+            send_hour = recipient.get("send_hour", 8)
+            if not manual and datetime.now().hour != send_hour:
+                log.write(f"Skipping {recipient['email']} — not their hour.\n")
+                continue
+            if recipient.get("daily_limit") and wb.already_sent_today(recipient["email"]):
+                log.write(f"Skipping {recipient['email']} — already sent today.\n")
+                continue
+            try:
+                cities = recipient["cities"]
+                city_data_list = [(city, *wb.city_cache[city]) for city in cities]
+                city_label = " & ".join(cities)
+                subject = f"🌤️ Weather Report ({city_label}) — {today_date} & {tomorrow_date}"
+                plain = wb.build_plain(city_data_list, wb.thought, recipient.get("name",""))
+                html  = wb.build_html(city_data_list, wb.thought, recipient.get("name",""))
+                wb.send_email(recipient["email"], subject, plain, html)
+                wb.log_email(recipient.get("name",""), recipient["email"], city_data_list, "sent")
+                sent.append(recipient["email"])
+                log.write(f"✅ Sent to {recipient['email']}\n")
+            except Exception as e:
+                errors.append(str(e))
+                log.write(f"❌ Failed {recipient['email']}: {e}\n")
+
+        return log.getvalue(), sent, errors
+
+    col1, col2 = st.columns(2)
 
     with col1:
         st.subheader("🧪 Test email — only to me")
         if st.button("Send test email to Jasmeet", type="primary", use_container_width=True):
             with st.spinner("Sending..."):
-                owner = st.secrets.get("JASMEET_EMAIL", "jasmeet27ghotra@gmail.com")
-                result = subprocess.run(
-                    [python, "-c",
-                     f"""
-import os, sys
-sys.argv = ['weather_bot.py']
-os.environ['MANUAL_RUN'] = '1'
-exec(open('{os.path.join(BASE, "weather_bot.py")}').read().replace(
-    'for recipient in RECIPIENTS:',
-    'for recipient in [r for r in RECIPIENTS if r["email"] == "{owner}"]:'
-))"""],
-                    capture_output=True, text=True, env=bot_env(manual=True), cwd=BASE
-                )
-            if result.returncode == 0:
+                out, sent, errors = run_bot(test_only=True, bypass_hour=True)
+            if sent:
                 st.success("✅ Test email sent to Jasmeet!")
-            else:
-                st.error(f"❌ Error:\n{result.stderr}")
-            if result.stdout:
-                with st.expander("Output"):
-                    st.text(result.stdout)
+            if errors:
+                st.error(f"❌ {errors[0]}")
+            with st.expander("Output"):
+                st.text(out)
 
     with col2:
         st.subheader("🚀 Full run — all recipients")
         bypass = st.checkbox("Bypass hour check (send regardless of scheduled time)")
         if st.button("Run weather bot now", use_container_width=True):
             with st.spinner("Running bot..."):
-                result = subprocess.run(
-                    [python, os.path.join(BASE, "weather_bot.py")],
-                    capture_output=True, text=True, env=bot_env(manual=bypass), cwd=BASE
-                )
-            if result.returncode == 0:
-                st.success("✅ Bot run complete!")
-            else:
-                st.error(f"❌ Error:\n{result.stderr}")
-            if result.stdout:
-                with st.expander("Output"):
-                    st.text(result.stdout)
+                out, sent, errors = run_bot(test_only=False, bypass_hour=bypass)
+            if sent:
+                st.success(f"✅ Sent to {len(sent)} recipient(s)!")
+            if errors:
+                st.error(f"❌ {errors[0]}")
+            with st.expander("Output"):
+                st.text(out)
+
 
 # ══════════════════════════════════════════════════════════════════════════════
 # PAGE 4 — LOGS
