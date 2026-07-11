@@ -5,7 +5,7 @@ import requests
 import smtplib
 import subprocess
 from email.message import EmailMessage
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 LOG_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "logs", "email_log.csv")
 
@@ -108,7 +108,8 @@ def fetch_city_data(lat, lon, aqi_points):
     }).json()
     daily = resp["daily"]
     h     = resp["hourly"]
-    now   = datetime.now().hour
+    IST   = timezone(timedelta(hours=5, minutes=30))
+    now   = datetime.now(IST).hour
     today = {
         "high": daily["temperature_2m_max"][0], "low": daily["temperature_2m_min"][0],
         "rain": daily["precipitation_probability_max"][0], "feels": daily["apparent_temperature_max"][0],
@@ -433,7 +434,9 @@ for recipient in RECIPIENTS:
     themes_used    = "+".join(theme_for_code(t.get("code_now",0))["name"] for _,t,_ in city_data_list)
     manual_run = os.environ.get("MANUAL_RUN") == "1"
     send_hour  = recipient.get("send_hour", 8)
-    if not manual_run and datetime.now().hour != send_hour:
+    IST = timezone(timedelta(hours=5, minutes=30))
+    ist_hour = datetime.now(IST).hour
+    if not manual_run and ist_hour != send_hour:
         print(f"Skipping {recipient['email']} — send hour is {send_hour}:00 IST.")
         continue
     if recipient.get("daily_limit") and already_sent_today(recipient["email"]):
