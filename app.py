@@ -38,9 +38,29 @@ def load_config():
         return json.load(f)
 
 def save_config(cfg):
-    with open(CONFIG, "w") as f:
-        json.dump(cfg, f, indent=2)
-    st.success("Config saved!")
+    import base64, requests as req
+    content = json.dumps(cfg, indent=2)
+
+    token = st.secrets.get("GITHUB_TOKEN", "")
+    if token:
+        headers = {"Authorization": f"token {token}", "Accept": "application/vnd.github.v3+json"}
+        api_url = "https://api.github.com/repos/jasmeet-dev/weather-bot/contents/config.json"
+        r = req.get(api_url, headers=headers)
+        sha = r.json().get("sha", "")
+        payload = {
+            "message": "GUI: update config.json",
+            "content": base64.b64encode(content.encode()).decode(),
+            "sha": sha
+        }
+        resp = req.put(api_url, json=payload, headers=headers)
+        if resp.status_code in (200, 201):
+            st.success("✅ Config saved and committed to GitHub!")
+        else:
+            st.error(f"❌ GitHub save failed: {resp.json().get('message')}")
+    else:
+        with open(CONFIG, "w") as f:
+            f.write(content)
+        st.success("Config saved locally!")
 
 def run_bot(manual=True):
     env = os.environ.copy()
