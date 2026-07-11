@@ -66,6 +66,16 @@
       ],
       "daily_limit": true,
       "send_hour": 8
+    },
+    {
+      "name": "Preet Kanwal Kaur",
+      "email": "kanwal14preet@gmail.com",
+      "cities": [
+        "Gurgaon",
+        "Mohali"
+      ],
+      "daily_limit": true,
+      "send_hour": 8
     }
   ],
   "cities": {
