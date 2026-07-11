@@ -260,11 +260,24 @@ elif page == "▶️ Run / Test":
 elif page == "📊 Logs":
     st.title("📊 Email Logs")
 
-    if not os.path.exists(LOG):
-        st.info("No logs yet — logs appear after the first email run.")
-    else:
-        import pandas as pd
-        df = pd.read_csv(LOG)
+    import pandas as pd, io, requests as req
+
+    # Always read latest log from GitHub (repo is public)
+    RAW_LOG_URL = "https://raw.githubusercontent.com/jasmeet-dev/weather-bot/main/logs/email_log.csv"
+
+    try:
+        r = req.get(RAW_LOG_URL, timeout=10)
+        if r.status_code == 200 and len(r.text.strip().splitlines()) > 1:
+            df = pd.read_csv(io.StringIO(r.text))
+        elif os.path.exists(LOG):
+            df = pd.read_csv(LOG)
+        else:
+            st.info("No logs yet — logs appear after the first email run.")
+            df = None
+    except Exception:
+        df = pd.read_csv(LOG) if os.path.exists(LOG) else None
+
+    if df is not None:
         df = df.sort_values("timestamp", ascending=False)
 
         # Summary metrics
