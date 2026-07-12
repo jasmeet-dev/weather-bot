@@ -13,20 +13,94 @@ OWNER  = "jasmeet27ghotra@gmail.com"
 
 st.set_page_config(page_title="Weather Bot", page_icon="🌤️", layout="wide")
 
+st.markdown("""
+<style>
+  /* Global */
+  [data-testid="stAppViewContainer"] { background: #0f172a; }
+  [data-testid="stSidebar"] { background: #1e293b !important; border-right: 1px solid #334155; }
+  [data-testid="stSidebar"] * { color: #e2e8f0 !important; }
+  h1,h2,h3 { color: #f1f5f9 !important; }
+  p, label, .stMarkdown { color: #cbd5e1 !important; }
+
+  /* Cards */
+  [data-testid="stExpander"] {
+    background: #1e293b !important;
+    border: 1px solid #334155 !important;
+    border-radius: 12px !important;
+    margin-bottom: 8px !important;
+  }
+  [data-testid="stExpander"] summary { color: #f1f5f9 !important; font-weight: 600; }
+
+  /* Metrics */
+  [data-testid="stMetric"] {
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 12px;
+    padding: 16px !important;
+  }
+  [data-testid="stMetricValue"] { color: #38bdf8 !important; font-size: 2rem !important; }
+  [data-testid="stMetricLabel"] { color: #94a3b8 !important; }
+
+  /* Buttons */
+  .stButton > button {
+    background: linear-gradient(135deg, #0ea5e9, #6366f1) !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 10px !important;
+    font-weight: 600 !important;
+    transition: opacity 0.2s !important;
+  }
+  .stButton > button:hover { opacity: 0.85 !important; }
+
+  /* Inputs */
+  .stTextInput input, .stSelectbox select, .stMultiSelect [data-baseweb="select"] {
+    background: #0f172a !important;
+    border: 1px solid #334155 !important;
+    color: #f1f5f9 !important;
+    border-radius: 8px !important;
+  }
+
+  /* Divider */
+  hr { border-color: #334155 !important; }
+
+  /* Dataframe */
+  [data-testid="stDataFrame"] { border-radius: 12px; overflow: hidden; }
+
+  /* Success/Error */
+  [data-testid="stAlert"] { border-radius: 10px !important; }
+
+  /* Radio sidebar */
+  [data-testid="stSidebar"] .stRadio label {
+    padding: 8px 12px !important;
+    border-radius: 8px !important;
+    margin: 2px 0 !important;
+    display: block !important;
+  }
+  [data-testid="stSidebar"] .stRadio label:hover { background: #334155 !important; }
+</style>
+""", unsafe_allow_html=True)
+
 # ── password gate ─────────────────────────────────────────────────────────────
 def check_password():
     correct = st.secrets.get("APP_PASSWORD", "weatherbot123")
     if st.session_state.get("authenticated"):
         return True
-    with st.form("login"):
-        st.title("🌤️ Weather Bot")
-        pw = st.text_input("Password", type="password")
-        if st.form_submit_button("Login"):
-            if pw == correct:
-                st.session_state["authenticated"] = True
-                st.rerun()
-            else:
-                st.error("Incorrect password")
+    st.markdown("""
+    <div style="max-width:400px;margin:80px auto;text-align:center;">
+      <div style="font-size:64px;margin-bottom:8px;">🌤️</div>
+      <h1 style="color:#f1f5f9;margin-bottom:4px;">Weather Bot</h1>
+      <p style="color:#64748b;margin-bottom:32px;">Daily weather briefing dashboard</p>
+    </div>""", unsafe_allow_html=True)
+    col = st.columns([1,2,1])[1]
+    with col:
+        with st.form("login"):
+            pw = st.text_input("Password", type="password", placeholder="Enter password...")
+            if st.form_submit_button("Login →", use_container_width=True):
+                if pw == correct:
+                    st.session_state["authenticated"] = True
+                    st.rerun()
+                else:
+                    st.error("Incorrect password")
     return False
 
 if not check_password():
@@ -81,10 +155,16 @@ def run_bot(manual=True):
     return result.stdout, result.stderr
 
 # ── sidebar ───────────────────────────────────────────────────────────────────
-st.sidebar.image("https://img.icons8.com/fluency/96/partly-cloudy-day.png", width=60)
-st.sidebar.title("🌤️ Weather Bot")
-st.sidebar.caption("Control panel")
-page = st.sidebar.radio("", ["📋 Recipients", "🏙️ Cities", "▶️ Run / Test", "📊 Logs"])
+st.sidebar.markdown("""
+<div style="text-align:center;padding:20px 0 16px 0;">
+  <div style="font-size:48px;">🌤️</div>
+  <div style="font-size:20px;font-weight:800;color:#f1f5f9;margin-top:4px;">Weather Bot</div>
+  <div style="font-size:12px;color:#64748b;margin-top:2px;">Daily briefing dashboard</div>
+</div>
+""", unsafe_allow_html=True)
+st.sidebar.divider()
+page = st.sidebar.radio("Navigation", ["📋 Recipients", "🏙️ Cities", "▶️ Run / Test", "📊 Logs"],
+                        label_visibility="collapsed")
 
 cfg = load_config()
 
@@ -92,8 +172,11 @@ cfg = load_config()
 # PAGE 1 — RECIPIENTS
 # ══════════════════════════════════════════════════════════════════════════════
 if page == "📋 Recipients":
-    st.title("📋 Recipients")
-    st.caption("Add, edit or remove people who receive the daily weather email.")
+    st.markdown("""<div style="background:linear-gradient(135deg,#1e293b,#0f2744);border-radius:16px;
+    padding:24px 28px;margin-bottom:24px;border:1px solid #334155;">
+    <h2 style="margin:0;color:#f1f5f9;">📋 Recipients</h2>
+    <p style="margin:6px 0 0 0;color:#64748b;">Manage who receives the daily weather email.</p>
+    </div>""", unsafe_allow_html=True)
 
     # Pause / Resume all
     col_all1, col_all2 = st.columns(2)
@@ -173,8 +256,11 @@ if page == "📋 Recipients":
 # PAGE 2 — CITIES
 # ══════════════════════════════════════════════════════════════════════════════
 elif page == "🏙️ Cities":
-    st.title("🏙️ Cities")
-    st.caption("Manage cities and their coordinates.")
+    st.markdown("""<div style="background:linear-gradient(135deg,#1e293b,#0f2744);border-radius:16px;
+    padding:24px 28px;margin-bottom:24px;border:1px solid #334155;">
+    <h2 style="margin:0;color:#f1f5f9;">🏙️ Cities</h2>
+    <p style="margin:6px 0 0 0;color:#64748b;">Manage city locations and AQI sampling points.</p>
+    </div>""", unsafe_allow_html=True)
 
     for city, data in list(cfg["cities"].items()):
         with st.expander(f"📍 {city}", expanded=False):
@@ -217,8 +303,11 @@ elif page == "🏙️ Cities":
 # PAGE 3 — RUN / TEST
 # ══════════════════════════════════════════════════════════════════════════════
 elif page == "▶️ Run / Test":
-    st.title("▶️ Run / Test")
-    st.info("**Test email** sends only to you (Jasmeet). **Full run** sends to everyone based on their scheduled time and daily limit.")
+    st.markdown("""<div style="background:linear-gradient(135deg,#1e293b,#0f2744);border-radius:16px;
+    padding:24px 28px;margin-bottom:24px;border:1px solid #334155;">
+    <h2 style="margin:0;color:#f1f5f9;">▶️ Run / Test</h2>
+    <p style="margin:6px 0 0 0;color:#64748b;">Send a test email to yourself or trigger a full run for all recipients.</p>
+    </div>""", unsafe_allow_html=True)
 
     def inject_secrets():
         for key, val in st.secrets.items():
@@ -309,7 +398,11 @@ elif page == "▶️ Run / Test":
 # PAGE 4 — LOGS
 # ══════════════════════════════════════════════════════════════════════════════
 elif page == "📊 Logs":
-    st.title("📊 Email Logs")
+    st.markdown("""<div style="background:linear-gradient(135deg,#1e293b,#0f2744);border-radius:16px;
+    padding:24px 28px;margin-bottom:24px;border:1px solid #334155;">
+    <h2 style="margin:0;color:#f1f5f9;">📊 Email Logs</h2>
+    <p style="margin:6px 0 0 0;color:#64748b;">Full history of every email sent or failed.</p>
+    </div>""", unsafe_allow_html=True)
 
     import pandas as pd, io, requests as req
 
