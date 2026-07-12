@@ -433,12 +433,6 @@ for recipient in RECIPIENTS:
     html           = build_html(city_data_list, thought, name)
     themes_used    = "+".join(theme_for_code(t.get("code_now",0))["name"] for _,t,_ in city_data_list)
     manual_run = os.environ.get("MANUAL_RUN") == "1"
-    send_hour  = recipient.get("send_hour", 8)
-    IST = timezone(timedelta(hours=5, minutes=30))
-    ist_hour = datetime.now(IST).hour
-    if not manual_run and ist_hour != send_hour:
-        print(f"Skipping {recipient['email']} — send hour is {send_hour}:00 IST.")
-        continue
     if recipient.get("daily_limit") and already_sent_today(recipient["email"]):
         print(f"Skipping {recipient['email']} — already sent today.")
         continue
