@@ -14,7 +14,13 @@ OWNER  = "jasmeet27ghotra@gmail.com"
 st.set_page_config(page_title="Weather Bot", page_icon="🌤️", layout="wide")
 
 st.markdown("""
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
+  /* Global font */
+  html, body, [class*="css"], .stMarkdown, .stTextInput, button, label, p, h1, h2, h3, div {
+    font-family: 'Nunito', sans-serif !important;
+  }
+
   /* Global */
   [data-testid="stAppViewContainer"] { background: #0f172a; }
   [data-testid="stSidebar"] { background: #1e293b !important; border-right: 1px solid #334155; }
