@@ -37,26 +37,38 @@ def load_config():
     with open(CONFIG) as f:
         return json.load(f)
 
-def save_config(cfg):
+def github_put(path, content_str, message):
     import base64, requests as req
-    content = json.dumps(cfg, indent=2)
-
     token = st.secrets.get("GITHUB_TOKEN", "")
-    if token:
-        headers = {"Authorization": f"token {token}", "Accept": "application/vnd.github.v3+json"}
-        api_url = "https://api.github.com/repos/jasmeet-dev/weather-bot/contents/config.json"
-        r = req.get(api_url, headers=headers)
-        sha = r.json().get("sha", "")
-        payload = {
-            "message": "GUI: update config.json",
-            "content": base64.b64encode(content.encode()).decode(),
-            "sha": sha
-        }
-        resp = req.put(api_url, json=payload, headers=headers)
-        if resp.status_code in (200, 201):
-            st.success("✅ Config saved and committed to GitHub!")
-        else:
-            st.error(f"❌ GitHub save failed: {resp.json().get('message')}")
+    if not token:
+        return False
+    headers = {"Authorization": f"token {token}", "Accept": "application/vnd.github.v3+json"}
+    api_url = f"https://api.github.com/repos/jasmeet-dev/weather-bot/contents/{path}"
+    r = req.get(api_url, headers=headers)
+    sha = r.json().get("sha", "")
+    payload = {
+        "message": message,
+        "content": base64.b64encode(content_str.encode()).decode(),
+        "sha": sha
+    }
+    resp = req.put(api_url, json=payload, headers=headers)
+    return resp.status_code in (200, 201)
+
+def save_config(cfg):
+    content = json.dumps(cfg, indent=2)
+    if github_put("config.json", content, "GUI: update config.json"):
+        st.success("✅ Config saved and committed to GitHub!")
+    else:
+        with open(CONFIG, "w") as f:
+            f.write(content)
+        st.success("Config saved locally!")
+
+def commit_log():
+    if not os.path.exists(LOG):
+        return
+    with open(LOG) as f:
+        content = f.read()
+    github_put("logs/email_log.csv", content, f"📧 GUI log: {datetime.now().strftime('%Y-%m-%d %H:%M')}")
     else:
         with open(CONFIG, "w") as f:
             f.write(content)
@@ -274,6 +286,7 @@ elif page == "▶️ Run / Test":
                 out, sent, errors = run_bot(test_only=True, bypass_hour=True)
             if sent:
                 st.success("✅ Test email sent to Jasmeet!")
+                commit_log()
             if errors:
                 st.error(f"❌ {errors[0]}")
             with st.expander("Output"):
@@ -287,6 +300,7 @@ elif page == "▶️ Run / Test":
                 out, sent, errors = run_bot(test_only=False, bypass_hour=bypass)
             if sent:
                 st.success(f"✅ Sent to {len(sent)} recipient(s)!")
+                commit_log()
             if errors:
                 st.error(f"❌ {errors[0]}")
             with st.expander("Output"):
