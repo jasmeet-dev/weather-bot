@@ -286,9 +286,10 @@ elif page == "▶️ Run / Test":
                 out, sent, errors = run_bot(test_only=True, bypass_hour=True)
             if sent:
                 st.success("✅ Test email sent to Jasmeet!")
-                commit_log()
             if errors:
                 st.error(f"❌ {errors[0]}")
+            if sent or errors:
+                commit_log()
             with st.expander("Output"):
                 st.text(out)
 
@@ -300,9 +301,10 @@ elif page == "▶️ Run / Test":
                 out, sent, errors = run_bot(test_only=False, bypass_hour=bypass)
             if sent:
                 st.success(f"✅ Sent to {len(sent)} recipient(s)!")
-                commit_log()
             if errors:
                 st.error(f"❌ {errors[0]}")
+            if sent or errors:
+                commit_log()
             with st.expander("Output"):
                 st.text(out)
 
