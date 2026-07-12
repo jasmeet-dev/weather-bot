@@ -87,11 +87,27 @@ if page == "📋 Recipients":
     st.title("📋 Recipients")
     st.caption("Add, edit or remove people who receive the daily weather email.")
 
+    # Pause / Resume all
+    col_all1, col_all2 = st.columns(2)
+    if col_all1.button("⏸️ Pause ALL emails", use_container_width=True):
+        for r in cfg["recipients"]:
+            r["active"] = False
+        save_config(cfg)
+        st.rerun()
+    if col_all2.button("▶️ Resume ALL emails", use_container_width=True):
+        for r in cfg["recipients"]:
+            r["active"] = True
+        save_config(cfg)
+        st.rerun()
+    st.divider()
+
     city_names = list(cfg["cities"].keys())
     hours      = list(range(6, 13))   # 6 AM – 12 PM
 
     for i, r in enumerate(cfg["recipients"]):
-        with st.expander(f"{'👑 ' if r['email']==OWNER else '👤 '}{r['name']}  —  {r['email']}", expanded=False):
+        is_active = r.get("active", True)
+        status_icon = "✅" if is_active else "⏸️"
+        with st.expander(f"{status_icon} {'👑 ' if r['email']==OWNER else '👤 '}{r['name']}  —  {r['email']}", expanded=False):
             col1, col2 = st.columns(2)
             r["name"]  = col1.text_input("Name",  r["name"],  key=f"name_{i}")
             r["email"] = col2.text_input("Email", r["email"], key=f"email_{i}")
@@ -100,6 +116,9 @@ if page == "📋 Recipients":
                 "Cities", city_names, default=r.get("cities", []), key=f"cities_{i}"
             )
 
+            r["active"] = st.toggle(
+                "Active (receives emails)", value=r.get("active", True), key=f"active_{i}"
+            )
             col3, col4 = st.columns(2)
             r["send_hour"] = col3.selectbox(
                 "Send time (IST)", hours,

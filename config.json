@@ -1,101 +1,15 @@
 {
   "recipients": [
-    {
-      "name": "Jasmeet",
-      "email": "JASMEET_EMAIL",
-      "cities": [
-        "Gurgaon",
-        "Mohali"
-      ],
-      "daily_limit": false,
-      "send_hour": 8
-    },
-    {
-      "name": "Harsh",
-      "email": "HARSH_EMAIL",
-      "cities": [
-        "Gurgaon",
-        "Mohali"
-      ],
-      "daily_limit": true,
-      "send_hour": 8
-    },
-    {
-      "name": "Sukhwinder",
-      "email": "SUKHWINDER_EMAIL",
-      "cities": [
-        "Gurgaon",
-        "Mohali"
-      ],
-      "daily_limit": true,
-      "send_hour": 8
-    },
-    {
-      "name": "Jasbir",
-      "email": "JASBIR_EMAIL",
-      "cities": [
-        "Mohali"
-      ],
-      "daily_limit": true,
-      "send_hour": 8
-    },
-    {
-      "name": "Gazaldeep",
-      "email": "GAZALDEEP_EMAIL",
-      "cities": [
-        "Mohali"
-      ],
-      "daily_limit": true,
-      "send_hour": 8
-    },
-    {
-      "name": "Abhijeet",
-      "email": "ABHIJEET_EMAIL",
-      "cities": [
-        "Mohali"
-      ],
-      "daily_limit": true,
-      "send_hour": 8
-    },
-    {
-      "name": "Preet Kanwal Kaur",
-      "email": "kanwal14preet@gmail.com",
-      "cities": [
-        "Gurgaon",
-        "Mohali"
-      ],
-      "daily_limit": true,
-      "send_hour": 8
-    }
+    {"name": "Jasmeet",          "email": "JASMEET_EMAIL",    "cities": ["Gurgaon", "Mohali"], "daily_limit": false, "send_hour": 8, "active": true},
+    {"name": "Harsh",            "email": "HARSH_EMAIL",      "cities": ["Gurgaon", "Mohali"], "daily_limit": true,  "send_hour": 8, "active": true},
+    {"name": "Sukhwinder",       "email": "SUKHWINDER_EMAIL", "cities": ["Gurgaon", "Mohali"], "daily_limit": true,  "send_hour": 8, "active": true},
+    {"name": "Jasbir",           "email": "JASBIR_EMAIL",     "cities": ["Mohali"],             "daily_limit": true,  "send_hour": 8, "active": true},
+    {"name": "Gazaldeep",        "email": "GAZALDEEP_EMAIL",  "cities": ["Mohali"],             "daily_limit": true,  "send_hour": 8, "active": true},
+    {"name": "Abhijeet",         "email": "ABHIJEET_EMAIL",   "cities": ["Mohali"],             "daily_limit": true,  "send_hour": 8, "active": true},
+    {"name": "Preet Kanwal Kaur","email": "PREET_EMAIL",      "cities": ["Gurgaon", "Mohali"], "daily_limit": true,  "send_hour": 8, "active": true}
   ],
   "cities": {
-    "Gurgaon": {
-      "lat": 28.46,
-      "lon": 77.03,
-      "aqi_points": [
-        [
-          28.46,
-          77.03
-        ]
-      ]
-    },
-    "Mohali": {
-      "lat": 30.67,
-      "lon": 76.76,
-      "aqi_points": [
-        [
-          30.7,
-          76.72
-        ],
-        [
-          30.67,
-          76.76
-        ],
-        [
-          30.64,
-          76.82
-        ]
-      ]
-    }
+    "Gurgaon": {"lat": 28.46, "lon": 77.03, "aqi_points": [[28.46, 77.03]]},
+    "Mohali":  {"lat": 30.67, "lon": 76.76, "aqi_points": [[30.70, 76.72], [30.67, 76.76], [30.64, 76.82]]}
   }
 }

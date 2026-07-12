@@ -432,6 +432,9 @@ for recipient in RECIPIENTS:
     plain          = build_plain(city_data_list, thought, name)
     html           = build_html(city_data_list, thought, name)
     themes_used    = "+".join(theme_for_code(t.get("code_now",0))["name"] for _,t,_ in city_data_list)
+    if not recipient.get("active", True):
+        print(f"Skipping {recipient['email']} — paused.")
+        continue
     manual_run = os.environ.get("MANUAL_RUN") == "1"
     if recipient.get("daily_limit") and already_sent_today(recipient["email"]):
         print(f"Skipping {recipient['email']} — already sent today.")
