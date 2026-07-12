@@ -69,10 +69,6 @@ def commit_log():
     with open(LOG) as f:
         content = f.read()
     github_put("logs/email_log.csv", content, f"📧 GUI log: {datetime.now().strftime('%Y-%m-%d %H:%M')}")
-    else:
-        with open(CONFIG, "w") as f:
-            f.write(content)
-        st.success("Config saved locally!")
 
 def run_bot(manual=True):
     env = os.environ.copy()
